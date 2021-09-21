@@ -62,8 +62,8 @@ class TestQuest():
         dialog = f"Thanks! Take this chocolate frog card."
         self.game.textbox.draw_box()
         self.game.textbox.draw_text(dialog)
+        self.game.player.inventory.append('Neville Longbottom Card')
         self.complete = True
-
 
 class TradeWithLoren():
     def __init__(self, game):

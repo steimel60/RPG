@@ -47,6 +47,7 @@ class Player(pg.sprite.Sprite):
         self.walk_count = 0
         self.initial_collide = False
         self.dir = 0
+        self.inventory = ['Pizza']
 
     def move(self):
         if self.walk_count + 1 > 23:
@@ -395,3 +396,44 @@ class Textbox():
 
     def update(self):
         self.check_game()
+
+class InventoryBox():
+    def __init__(self, game, x, y):
+        #self.groups = game.all_sprites, game.textbox
+        #pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = pg.Surface((0,0))
+        self.image.fill(WHITE)
+        self.x = x
+        self.y = y
+        self.rect = pg.Rect(x, y, 300, 100)
+        self.rect.x = x
+        self.rect.y = y
+        self.closed = True
+        self.open = False
+
+    def draw_box(self):
+        self.image = pg.Surface((300,600))
+        self.image.fill(WHITE)
+
+    def draw_text(self):
+        items = []
+        for i in range(0,len(self.game.player.inventory)):
+            itemName = self.game.player.inventory[i]
+            items.append(itemName)
+        for item in items:
+            font = pg.font.Font('freesansbold.ttf', 12)
+            text = font.render(item, True, BLACK, WHITE)
+            textRect = text.get_rect()
+            self.image.blit(text, (10,items.index(item)*12))
+
+    def switch(self):
+        if self.open:
+            self.closed = True
+            self.open = False
+            self.image = pg.Surface((0,0))
+        else:
+            self.closed = False
+            self.open = True
+            self.draw_box()
+            self.draw_text()

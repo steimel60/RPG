@@ -76,6 +76,7 @@ class Game:
 
         self.camera = Camera(self.map.width, self.map.height)
         self.textbox = Textbox(self, self.player.x, self.player.y)
+        self.inventory = InventoryBox(self, self.player.x, self.player.y)
 
     def check_level(self):
         for door in self.doors:
@@ -118,6 +119,7 @@ class Game:
         for sprite in self.all_sprites:
             self.screen.blit(sprite.image, self.camera.apply(sprite))
         self.screen.blit(self.textbox.image, (20,500))
+        self.screen.blit(self.inventory.image, (800,30))
         pg.display.flip()
 
     def events(self):
@@ -131,6 +133,8 @@ class Game:
             if event.type == pg.KEYUP:
                 if event.key == pg.K_SPACE:
                     self.player.check_for_interactions()
+                if event.key == pg.K_i:
+                    self.inventory.switch()
             keys = pg.key.get_pressed()
             #if keys[pg.K_c]:
                 #skin_select(self)
