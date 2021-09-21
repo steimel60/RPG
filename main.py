@@ -37,6 +37,7 @@ class Game:
         self.map_img = self.map.make_map()
         self.map_rect = self.map_img.get_rect()
 
+
     def new(self, from_door=[False]):
         self.all_sprites = pg.sprite.Group()
         self.doors = pg.sprite.Group()
