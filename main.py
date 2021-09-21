@@ -7,8 +7,6 @@ from sprites import *
 from tilemap import *
 import random
 
-
-
 class Game:
     def __init__(self):
         pg.init()
@@ -36,7 +34,6 @@ class Game:
         self.map = TiledMap(path.join(map_folder, self.level + '.tmx'))
         self.map_img = self.map.make_map()
         self.map_rect = self.map_img.get_rect()
-
 
     def new(self, from_door=[False]):
         self.all_sprites = pg.sprite.Group()
