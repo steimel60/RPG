@@ -20,7 +20,7 @@ class Obstacle(pg.sprite.Sprite):
         self.rect.y = y
 
 class Player(pg.sprite.Sprite):
-    def __init__(self, game, x, y):
+    def __init__(self, game, x, y, inventory=['Nimbus 2000','Polyjuice Potion','Pumpkin Juice','Cauldron']):
         self.groups = game.all_sprites, game.user_group
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
@@ -47,7 +47,11 @@ class Player(pg.sprite.Sprite):
         self.walk_count = 0
         self.initial_collide = False
         self.dir = 0
-        self.inventory = ['Pizza']
+        #Inventory
+        self.inventory = inventory
+        self.galleons = 0
+        self.sickles = 2
+        self.knuts = 13
 
     def move(self):
         if self.walk_count + 1 > 23:
@@ -404,6 +408,8 @@ class InventoryBox():
         self.game = game
         self.image = pg.Surface((0,0))
         self.image.fill(WHITE)
+        self.font = pg.font.Font('freesansbold.ttf', 12)
+        self.width = 224
         self.x = x
         self.y = y
         self.rect = pg.Rect(x, y, 300, 100)
@@ -411,25 +417,105 @@ class InventoryBox():
         self.rect.y = y
         self.closed = True
         self.open = False
+        self.selectionCount = 0
+        self.selection = False
+        self.items = self.get_items()
+        #Text data
+        self.fontLocs = []
+
+    def get_items(self):
+        items = [item for item in self.game.player.inventory]
+        return items
+
+    def draw(self):
+        self.draw_box()
+        self.draw_text()
+        self.draw_selection_box()
 
     def draw_box(self):
         self.image = pg.Surface((300,600))
         self.image.fill(WHITE)
 
     def draw_text(self):
-        items = []
-        for i in range(0,len(self.game.player.inventory)):
-            itemName = self.game.player.inventory[i]
-            items.append(itemName)
-        for item in items:
+        galleons = self.game.player.galleons
+        sickles = self.game.player.sickles
+        knuts = self.game.player.knuts
+        font = self.font
+        bigfont = pg.font.Font(f'{font_folder}/MagicFont.ttf', 36)
+        blitLoc = [10,0]
+        Locs = []
+        #Blit Money
+        inventoryLabel = 'Inventory'
+        text = bigfont.render(inventoryLabel, True, BLACK, WHITE)
+        size = bigfont.size(inventoryLabel)
+        centerX = size[0]//2
+        self.image.blit(text, (self.width//2-centerX,0))
+        blitLoc[1] += size[1]
+        moneyLabel = "Money"
+        text = font.render(moneyLabel, True, BLACK, WHITE)
+        size = font.size(moneyLabel)
+        centerX = size[0]//2
+        self.image.blit(text, (0,blitLoc[1]))
+        blitLoc[1] += size[1]
+        gallStr = f'{galleons} Galleons'
+        sickleStr = f'{sickles} Sickels'
+        knutStr = f'{knuts} Knuts'
+        coinStrs = [gallStr, sickleStr, knutStr]
+        for coin in coinStrs:
+            size = font.size(coin)
+            text = font.render(coin, True, BLACK, WHITE)
+            self.image.blit(text, (self.width-size[0],blitLoc[1]))
+            blitLoc[1] += size[1]
+        itemsLabel = "Items"
+        text = font.render(itemsLabel, True, BLACK, WHITE)
+        size = font.size(itemsLabel)
+        self.image.blit(text, (0,blitLoc[1]))
+        blitLoc[1] += size[1]
+        for i in range(0,len(self.items)):
+            text = font.render(self.items[i], True, BLACK, WHITE)
+            height = font.size(self.items[i])[1]
+            self.image.blit(text, (blitLoc[0]+10,blitLoc[1]))
+            Locs.append((blitLoc[0]+10,blitLoc[1]))
+            blitLoc[1] += height
+        self.fontLocs = Locs
+
+    def draw_selection_box(self):
+        if self.selection == True:
+            #Draw font on top of box and get rect size
             font = pg.font.Font('freesansbold.ttf', 12)
-            text = font.render(item, True, BLACK, WHITE)
+            text = font.render(self.items[self.selectionCount], True, WHITE, BLACK)
             textRect = text.get_rect()
-            self.image.blit(text, (10,items.index(item)*12))
+            height = font.size(self.items[self.selectionCount])[1]
+            selectionBox = pg.Surface((300,height))
+            self.image.blit(selectionBox, (0,self.fontLocs[self.selectionCount][1]))
+            self.image.blit(text, (10,self.fontLocs[self.selectionCount][1]))
+
+    def events(self):
+        for event in pg.event.get():
+            if event.type == pg.KEYUP:
+                if event.key == pg.K_DOWN or event.key == pg.K_s:
+                    if not self.selection:
+                        self.selection = True
+                        self.selectionCount -= 1
+                    self.selectionCount += 1
+                    if self.selectionCount > len(self.game.player.inventory)-1:
+                        self.selectionCount=0
+                if event.key == pg.K_UP or event.key == pg.K_w:
+                    if not self.selection:
+                        self.selection = True
+                        self.selectionCount += 1
+                    self.selectionCount -= 1
+                    if self.selectionCount < 0:
+                        self.selectionCount = len(self.game.player.inventory)-1
+                if event.key == pg.K_i or event.key == pg.K_ESCAPE:
+                    self.selectionCount = 0
+                    self.switch()
+        self.update()
 
     def switch(self):
         if self.open:
             self.closed = True
+            self.selection = False
             self.open = False
             self.image = pg.Surface((0,0))
         else:
@@ -437,3 +523,8 @@ class InventoryBox():
             self.open = True
             self.draw_box()
             self.draw_text()
+
+    def update(self):
+        self.items = self.get_items()
+        if self.open:
+            self.draw()

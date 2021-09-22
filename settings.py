@@ -3,6 +3,7 @@ from os import path
 ##Load Folders
 game_folder = path.dirname(__file__)
 img_folder = path.join(game_folder, 'img')
+font_folder = path.join(game_folder, 'Fonts')
 
 # define some colors (R, G, B)
 WHITE = (255, 255, 255)
@@ -29,3 +30,5 @@ GRIDHEIGHT = screenHeight / TILESIZE
 WALK_SPEED = 2
 RUN_SPEED = 4
 skin_colors = [(245,185,158),(234,154,95),(127,67,41)]
+
+#
