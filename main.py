@@ -1,10 +1,11 @@
 import pygame as pg
-import sys
+import sys, states
 from os import path
 from settings import *
 from Quests import *
 from sprites import *
 from tilemap import *
+from shops import *
 import random
 
 class Game:
@@ -19,6 +20,12 @@ class Game:
         self.player = None
         self.quests = self.init_quests()
         self.menus = []
+        self.shop = None
+        self.STATE_DICT = {
+            'gameplay': states.GameplayState(self),
+            'shop' : states.ShopState(self)
+        }
+        self.current_state = 'gameplay'
 
     def init_quests(self):
         quest1 = TestQuest(self)
@@ -43,41 +50,45 @@ class Game:
         self.walls = pg.sprite.Group()
         self.npcs = pg.sprite.Group()
         self.walk_paths = pg.sprite.Group()
-
+        self.shops = []
+        #Load Data from Tiled Map
         for tile_object in self.map.tmxdata.objects:
             if not from_door[0]:
                 if tile_object.name == "player":
                     self.player = Player(self, tile_object.x, tile_object.y)
-            if tile_object.name == "wall":
+            if tile_object.name == "wall" or tile_object.name == "shop":
                 self.wall = Obstacle(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height)
             if tile_object.name == "door":
-                self.wall = Door(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.door_id, tile_object.to_level, tile_object.exit_dir)
+                self.door = Door(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.door_id, tile_object.to_level, tile_object.exit_dir)
             if tile_object.name == "NPC":
                 self.npc = NPC(self, tile_object.x, tile_object.y, tile_object.path_id, tile_object.name_id, tile_object.skin_id, tile_object.hair_id, tile_object.hair_color)
             if tile_object.name == "walk_path":
                 self.walk_path = Walk_Path(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.path_id)
-
+            if tile_object.name == "shop":
+                self.loaded_shop = Shop(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.shop_id)
+                self.shops.append(self.loaded_shop)
+        #Load Level by Door Data
         if from_door[0]:
             #Check if player went through door
             for door in self.doors:
                 if door.door_id == from_door[1]:
                     #Place player by door they came out of
                     if from_door[2] == 'up':
-                        self.player = Player(self, door.x, door.y-TILESIZE, inventory=self.player.inventory)
+                        self.player = Player(self, door.x, door.y-TILESIZE, inventory=self.player.inventory, money=(self.player.galleons,self.player.sickles,self.player.knuts))
                         self.player.dir = 1
                     elif from_door[2] == 'down':
-                        self.player = Player(self, door.x, door.y+TILESIZE, inventory=self.player.inventory)
+                        self.player = Player(self, door.x, door.y+TILESIZE, inventory=self.player.inventory, money=(self.player.galleons,self.player.sickles,self.player.knuts))
                         self.player.dir = 0
                     elif from_door[2] == 'left':
-                        self.player = Player(self, door.x-TILESIZE, door.y, inventory=self.player.inventory)
+                        self.player = Player(self, door.x-TILESIZE, door.y, inventory=self.player.inventory, money=(self.player.galleons,self.player.sickles,self.player.knuts))
                         self.player.dir = 2
                     elif from_door[2] == 'right':
-                        self.player = Player(self, door.x+TILESIZE, door.y, inventory=self.player.inventory)
+                        self.player = Player(self, door.x+TILESIZE, door.y, inventory=self.player.inventory, money=(self.player.galleons,self.player.sickles,self.player.knuts))
                         self.player.dir = 3
-
+        #Set Others
         self.camera = Camera(self.map.width, self.map.height)
         self.textbox = Textbox(self, self.player.x, self.player.y)
-        self.inventory = InventoryBox(self, self.player.x, self.player.y)
+        self.inventory = InventoryBox(self)
         self.menus = [self.inventory]
 
     def check_level(self):
@@ -104,12 +115,7 @@ class Game:
         sys.exit()
     #Update
     def update(self):
-        for menu in self.menus:
-            if not menu.open:
-                self.all_sprites.update()
-                self.textbox.update()
-                self.camera.update(self.player)
-                self.check_level()
+        self.STATE_DICT[self.current_state].update()
 
     def draw_grid(self):
         for x in range(0, screenWidth, TILESIZE):
@@ -118,36 +124,21 @@ class Game:
             pg.draw.line(self.screen, BLACK, (0, y), (screenWidth, y))
 
     def draw(self):
-        self.screen.blit(self.map_img, self.camera.apply_rect(self.map_rect))
-        self.draw_grid()
-        for sprite in self.all_sprites:
-            self.screen.blit(sprite.image, self.camera.apply(sprite))
-        self.screen.blit(self.textbox.image, (20,500))
-        self.screen.blit(self.inventory.image, (800,30))
-        pg.display.flip()
+        self.STATE_DICT[self.current_state].draw()
+        #self.screen.blit(self.map_img, self.camera.apply_rect(self.map_rect))
+        #self.draw_grid()
+        #for sprite in self.all_sprites:
+        #    self.screen.blit(sprite.image, self.camera.apply(sprite))
+        #self.screen.blit(self.textbox.image, (20,500))
+        #self.screen.blit(self.inventory.image, (800,30))
+        #try:
+        #    self.screen.blit(self.shop.gui.image, (800,30))
+        #except:
+        #    print('no shop on level')
+        #pg.display.flip()
 
     def events(self):
-        menu_open = False
-        for menu in self.menus:
-            if menu.open:
-                menu.events()
-                menu_open = True
-        # catch all events here
-        if not menu_open:
-            for event in pg.event.get():
-                if event.type == pg.QUIT:
-                    self.quit()
-                if event.type == pg.KEYDOWN:
-                    if event.key == pg.K_ESCAPE:
-                        self.quit()
-                if event.type == pg.KEYUP:
-                    if event.key == pg.K_SPACE:
-                        self.player.check_for_interactions()
-                    if event.key == pg.K_i:
-                        self.inventory.switch()
-                keys = pg.key.get_pressed()
-                #if keys[pg.K_c]:
-                    #skin_select(self)
+        self.STATE_DICT[self.current_state].events()
 
     def show_start_screen(self):
         pass

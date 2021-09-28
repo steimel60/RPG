@@ -20,7 +20,7 @@ class Obstacle(pg.sprite.Sprite):
         self.rect.y = y
 
 class Player(pg.sprite.Sprite):
-    def __init__(self, game, x, y, inventory=['Nimbus 2000','Polyjuice Potion','Pumpkin Juice','Cauldron']):
+    def __init__(self, game, x, y, inventory=['Nimbus 2000','Polyjuice Potion','Pumpkin Juice','Cauldron'], money=(0,1,23)):
         self.groups = game.all_sprites, game.user_group
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
@@ -49,9 +49,9 @@ class Player(pg.sprite.Sprite):
         self.dir = 0
         #Inventory
         self.inventory = inventory
-        self.galleons = 0
-        self.sickles = 2
-        self.knuts = 13
+        self.galleons = money[0]
+        self.sickles = money[1]
+        self.knuts = money[2]
 
     def move(self):
         if self.walk_count + 1 > 23:
@@ -124,6 +124,7 @@ class Player(pg.sprite.Sprite):
         self.image = self.images[self.dir][self.walk_count // 6]
 
     def check_for_interactions(self):
+        #Check NPCS
         if self.dir == 0: #down
             for npc in self.game.npcs:
                 if npc.x == self.x and npc.y == self.y + TILESIZE:
@@ -144,6 +145,23 @@ class Player(pg.sprite.Sprite):
                 if npc.x == self.x + TILESIZE and npc.y == self.y:
                     npc.dir=2
                     npc.check_interactions()
+        #Check Shops
+        if self.dir == 0: #down
+            for shop in self.game.shops:
+                if shop.x == self.x and shop.y == self.y + TILESIZE:
+                    shop.check_interactions()
+        if self.dir == 1: #up
+            for shop in self.game.shops:
+                if shop.x == self.x and shop.y == self.y - TILESIZE:
+                    shop.check_interactions()
+        if self.dir == 2: #left
+            for shop in self.game.shops:
+                if shop.x == self.x - TILESIZE and shop.y == self.y:
+                    shop.check_interactions()
+        if self.dir == 3: #right
+            for shop in self.game.shops:
+                if shop.x == self.x + TILESIZE and shop.y == self.y:
+                    shop.check_interactions()
 
     def update(self):
         self.get_keys()
@@ -391,6 +409,12 @@ class Textbox():
             if user.moving:
                 self.close_box()
 
+    def draw_dialogue(self, name, dialog):
+        font = pg.font.Font('freesansbold.ttf', 16)
+        text = font.render(f'{name}: {dialog}', True, BLACK, WHITE)
+        textRect = text.get_rect()
+        self.image.blit(text, textRect)
+
     def get_text(self, text):
         #Read in text to display as a list (pages)
         pass
@@ -402,7 +426,7 @@ class Textbox():
         self.check_game()
 
 class InventoryBox():
-    def __init__(self, game, x, y):
+    def __init__(self, game):
         #self.groups = game.all_sprites, game.textbox
         #pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
@@ -410,11 +434,6 @@ class InventoryBox():
         self.image.fill(WHITE)
         self.font = pg.font.Font('freesansbold.ttf', 12)
         self.width = 224
-        self.x = x
-        self.y = y
-        self.rect = pg.Rect(x, y, 300, 100)
-        self.rect.x = x
-        self.rect.y = y
         self.closed = True
         self.open = False
         self.selectionCount = 0
