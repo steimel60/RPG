@@ -415,6 +415,28 @@ class Textbox():
         textRect = text.get_rect()
         self.image.blit(text, textRect)
 
+    def yes_no_question(self, name, question, answer):
+        font = pg.font.Font('freesansbold.ttf', 16)
+        self.draw_dialogue(name, question)
+        #Get fonts and sizes
+        yes_font = font.render(f'Yes', True, BLACK, WHITE)
+        no_font = font.render(f'No', True, BLACK, WHITE)
+        arrow_font = font.render(f' <-', True, BLACK, WHITE)
+        q_size = font.size(f'{name}: {question}')
+        y_size = font.size('Yes')
+        n_size = font.size('No')
+        arrow_size = font.size(' <-')
+        #Get Font Locations
+        y_loc = (0,q_size[1])
+        n_loc = (0,y_loc[1]+y_size[1])
+        if answer == 'yes':
+            arrow_loc = (y_size[0],y_loc[1])
+        else:
+            arrow_loc = (n_size[0],n_loc[1])
+        #blit to textbox
+        self.image.blit(yes_font, y_loc)
+        self.image.blit(no_font, n_loc)
+        self.image.blit(arrow_font, arrow_loc)
     def get_text(self, text):
         #Read in text to display as a list (pages)
         pass

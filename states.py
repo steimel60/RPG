@@ -49,6 +49,9 @@ class ShopState():
         self.menu_image.fill(WHITE)
         self.width = 224
         self.items = None
+        self.purchased_item = None
+        self.dialog_state = 'dialog'
+        self.ans = 'yes'
         #Text data
         self.text = None
         self.fontLocs = []
@@ -58,37 +61,47 @@ class ShopState():
         self.shop = self.game.shop
 
     def events(self):
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                self.game.quit()
-            if event.type == pg.KEYDOWN:
-                if event.key == pg.K_ESCAPE:
+        if self.dialog_state == 'dialog':
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
                     self.game.quit()
-            if event.type == pg.KEYUP:
-                #close
-                if event.key == pg.K_c:
-                    self.game.shop = None
-                    self.game.textbox.close_box()
-                    self.game.current_state = 'gameplay'
-                #scroll down
-                if event.key == pg.K_DOWN or event.key == pg.K_s:
-                    if not self.selection:
-                        self.selection = True
-                        self.selectionCount -= 1
-                    self.selectionCount += 1
-                    if self.selectionCount > len(self.items)-1:
-                        self.selectionCount=0
-                #scroll up
-                if event.key == pg.K_UP or event.key == pg.K_w:
-                    if not self.selection:
-                        self.selection = True
+                if event.type == pg.KEYDOWN:
+                    if event.key == pg.K_ESCAPE:
+                        self.game.quit()
+                if event.type == pg.KEYUP:
+                    #close
+                    if event.key == pg.K_c:
+                        self.close_shop()
+                    #scroll down
+                    if event.key == pg.K_DOWN or event.key == pg.K_s:
+                        if not self.selection:
+                            self.selection = True
+                            self.selectionCount -= 1
                         self.selectionCount += 1
-                    self.selectionCount -= 1
-                    if self.selectionCount < 0:
-                        self.selectionCount = len(self.items)-1
-                #select
-                if event.key == pg.K_SPACE:
-                    self.buy()
+                        if self.selectionCount > len(self.items)-1:
+                            self.selectionCount=0
+                    #scroll up
+                    if event.key == pg.K_UP or event.key == pg.K_w:
+                        if not self.selection:
+                            self.selection = True
+                            self.selectionCount += 1
+                        self.selectionCount -= 1
+                        if self.selectionCount < 0:
+                            self.selectionCount = len(self.items)-1
+                    #select
+                    if event.key == pg.K_SPACE:
+                        self.buy()
+        if self.dialog_state == 'question':
+            for event in pg.event.get():
+                if event.type == pg.KEYUP:
+                    if event.key == pg.K_DOWN or event.key == pg.K_s or event.key == pg.K_UP or event.key == pg.K_w:
+                        if self.ans == 'yes':
+                            self.ans = 'no'
+                        else:
+                            self.ans = 'yes'
+                        #select
+                    if event.key == pg.K_SPACE:
+                        self.answer()
 
     def get_items(self):
         self.items = {item:self.shop.shop.items[item]['cost'] for item in self.shop.shop.items}
@@ -103,7 +116,10 @@ class ShopState():
         self.draw_selection_box()
         self.game.textbox.draw_box()
         text = self.text
-        self.game.textbox.draw_dialogue(self.shop.shop.clerk, text)
+        if self.dialog_state == 'dialog':
+            self.game.textbox.draw_dialogue(self.shop.shop.clerk, text)
+        elif self.dialog_state == 'question':
+            self.game.textbox.yes_no_question(self.shop.shop.clerk, text, self.ans)
         self.game.screen.blit(self.game.textbox.image, (20,500))
         self.game.screen.blit(self.menu_image, (800,30))
         pg.display.flip()
@@ -180,11 +196,24 @@ class ShopState():
             self.menu_image.blit(text, (10,self.fontLocs[self.selectionCount][1]))
             self.menu_image.blit(costBlit, (self.width-costSize[0], self.fontLocs[self.selectionCount][1]))
 
+    def wait_for_key_up(self):
+        state = self.dialog_state
+        self.dialog_state = 'waiting'
+        hit_space = False
+        while not hit_space:
+            for event in pg.event.get():
+                if event.type == pg.KEYUP:
+                    #next
+                    if event.key == pg.K_SPACE:
+                        hit_space = True
+        self.dialog_state = state
+
     def buy(self):
         item_list = list(self.items.keys())
         item = item_list[self.selectionCount]
+        self.purchased_item = item_list[self.selectionCount]
         #get item cost
-        cost = self.items[item]
+        cost = self.items[self.purchased_item]
         cost_knuts = cost[0]*493 + cost[1]* 29 + cost[2]
         #get player money
         galleons = self.game.player.galleons
@@ -195,6 +224,8 @@ class ShopState():
         if cost_knuts > player_knuts:
             self.text = "You don't have enough money for that!"
         else:
+            if self.shop.shop.check_for_special_buy(self.purchased_item):
+                self.shop.shop.special_buy(self, self.purchased_item)
             #pay and recieve item
             remaining_knuts = player_knuts - cost_knuts
             galleons = remaining_knuts // 493
@@ -208,12 +239,33 @@ class ShopState():
             print(f'{galleons} galleons')
             print(f'{sickles} sickles')
             print(f'{knuts} knuts')
-            self.text = f"Enjoy your {item}"
-            self.game.player.inventory.append(item)
-        #set player money
-        self.game.player.galleons = galleons
-        self.game.player.sickles = sickles
-        self.game.player.knuts = knuts
+            self.text = f"Enjoy your {self.purchased_item}"
+            self.game.player.inventory.append(self.purchased_item)
+            #set player money
+            self.game.player.galleons = galleons
+            self.game.player.sickles = sickles
+            self.game.player.knuts = knuts
+            self.continue_shopping()
+
+    def continue_shopping(self):
+        self.text = 'Would you like to continue shopping?'
+        self.dialog_state = 'question'
+
+    def answer(self):
+        if self.text == 'Would you like to continue shopping?' and self.ans == 'yes':
+            self.text = f'Welcome to {self.shop.shop.name}!'
+            self.dialog_state = 'dialog'
+        if self.text == 'Would you like to continue shopping?' and self.ans == 'no':
+            self.dialog_state = 'dialog'
+            self.text = f'Enjoy your {self.purchased_item}!'
+            self.draw()
+            self.wait_for_key_up()
+            self.close_shop()
+
+    def close_shop(self):
+        self.game.shop = None
+        self.game.textbox.close_box()
+        self.game.current_state = 'gameplay'
 
     def update(self):
         if self.shop != None:
