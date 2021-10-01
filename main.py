@@ -23,7 +23,8 @@ class Game:
         self.shop = None
         self.STATE_DICT = {
             'gameplay': states.GameplayState(self),
-            'shop' : states.ShopState(self)
+            'shop' : states.ShopState(self),
+            'menu' : states.MenuState(self)
         }
         self.current_state = 'gameplay'
 

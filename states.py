@@ -37,7 +37,6 @@ class GameplayState():
         self.game.camera.update(self.game.player)
         self.game.check_level()
 
-
 class ShopState():
     def __init__(self, game):
         self.game = game
@@ -281,3 +280,23 @@ class ShopState():
             print('Getting Shop')
             self.get_shop()
             self.get_items()
+
+class MenuState():
+    def __init__(self, game):
+        self.game = game
+        self.menu_state = 'main'
+        self.menu_dict = {
+                'inventory' : InventoryState(),
+                'spellbook' : SpellbookState()
+        }
+    pass
+    #Draw Side Menu
+    #Create dict of menus (inventory, spells, etc.)
+    #Main menu lists other menus
+    #Selected Menu (new state) then displayed
+
+class InventoryState():
+    pass
+
+class SpellbookState():
+    pass
