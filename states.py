@@ -41,7 +41,6 @@ class GameplayState():
 class ShopState():
     def __init__(self, game):
         self.game = game
-        self.selection = False
         self.shop = self.game.shop
         self.selection = False
         self.selectionCount = 0
@@ -263,6 +262,10 @@ class ShopState():
             self.close_shop()
 
     def close_shop(self):
+        self.text = None
+        self.selection = False
+        self.selectionCount = 0
+        self.purchased_item = None
         self.game.shop = None
         self.game.textbox.close_box()
         self.game.current_state = 'gameplay'
