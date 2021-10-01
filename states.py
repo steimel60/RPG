@@ -89,7 +89,10 @@ class ShopState():
                             self.selectionCount = len(self.items)-1
                     #select
                     if event.key == pg.K_SPACE:
-                        self.buy()
+                        if self.selection:
+                            self.buy()
+                        else:
+                            self.selection = True
         if self.dialog_state == 'question':
             for event in pg.event.get():
                 if event.type == pg.KEYUP:
