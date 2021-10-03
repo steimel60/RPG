@@ -126,17 +126,6 @@ class Game:
 
     def draw(self):
         self.STATE_DICT[self.current_state].draw()
-        #self.screen.blit(self.map_img, self.camera.apply_rect(self.map_rect))
-        #self.draw_grid()
-        #for sprite in self.all_sprites:
-        #    self.screen.blit(sprite.image, self.camera.apply(sprite))
-        #self.screen.blit(self.textbox.image, (20,500))
-        #self.screen.blit(self.inventory.image, (800,30))
-        #try:
-        #    self.screen.blit(self.shop.gui.image, (800,30))
-        #except:
-        #    print('no shop on level')
-        #pg.display.flip()
 
     def events(self):
         self.STATE_DICT[self.current_state].events()
