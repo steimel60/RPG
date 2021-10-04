@@ -90,6 +90,7 @@ class Game:
         self.camera = Camera(self.map.width, self.map.height)
         self.textbox = Textbox(self, self.player.x, self.player.y)
         self.inventory = InventoryBox(self)
+        self.side_menu = SideMenu(self)
         self.menus = [self.inventory]
 
     def check_level(self):

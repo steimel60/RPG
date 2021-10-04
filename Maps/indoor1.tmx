@@ -87,8 +87,8 @@
   <object id="9" name="wall" x="128" y="480" width="256" height="32"/>
   <object id="10" name="NPC" x="384" y="416" width="32" height="32">
    <properties>
-    <property name="hair_color" type="int" value="0"/>
-    <property name="hair_id" type="int" value="1"/>
+    <property name="hair_color" type="int" value="3"/>
+    <property name="hair_id" type="int" value="2"/>
     <property name="name_id" value="Wanda"/>
     <property name="path_id" type="int" value="-1"/>
     <property name="skin_id" type="int" value="0"/>

@@ -1,5 +1,6 @@
-import pygame as pg
-from settings import *
+#import pygame as pg
+#from settings import *
+from menu_states import *
 
 class GameplayState():
     def __init__(self, game):
@@ -17,6 +18,8 @@ class GameplayState():
                     self.game.player.check_for_interactions()
                 if event.key == pg.K_i:
                     self.game.inventory.switch()
+                if event.key == pg.K_m:
+                    self.game.current_state = 'menu'
             keys = pg.key.get_pressed()
                 #if keys[pg.K_c]:
                     #skin_select(self)
@@ -286,17 +289,49 @@ class MenuState():
         self.game = game
         self.menu_state = 'main'
         self.menu_dict = {
-                'inventory' : InventoryState(),
-                'spellbook' : SpellbookState()
+                'main' : SideMenuMainState(self, self.game),
+                'Inventory' : InventoryState(self, self.game),
+                'Spellbooks' : SpellbookState(self, self.game),
+                'Quest Guide' : QuestGuideState(self, self.game),
+                'Save' : SaveState(self, self.game)
         }
-    pass
+
+    def close_menu(self):
+        self.menu_state = 'main'
+        self.game.current_state = 'gameplay'
     #Draw Side Menu
+    def draw(self):
+        self.menu_dict[self.menu_state].draw()
     #Create dict of menus (inventory, spells, etc.)
+
     #Main menu lists other menus
     #Selected Menu (new state) then displayed
-
-class InventoryState():
-    pass
-
-class SpellbookState():
-    pass
+    #Get Events
+    def events(self):
+        self.menu_dict[self.menu_state].events()
+        #for event in pg.event.get():
+        #    if event.type == pg.QUIT:
+        #        self.game.quit()
+        #    if event.type == pg.KEYDOWN:
+        #        if event.key == pg.K_ESCAPE:
+        #            self.game.quit()
+        #    if event.type == pg.KEYUP:
+        #        if event.key == pg.K_DOWN or event.key == pg.K_s:
+        #            if not self.selection:
+        #                self.selection = True
+        #                self.selectionCount -= 1
+        #            self.selectionCount += 1
+        #            if self.selectionCount > len(self.items)-1:
+        #                self.selectionCount=0
+                #scroll up
+        #        if event.key == pg.K_UP or event.key == pg.K_w:
+        #            if not self.selection:
+        #                self.selection = True
+        #                self.selectionCount += 1
+        #            self.selectionCount -= 1
+        #            if self.selectionCount < 0:
+        #                self.selectionCount = len(self.items)-1
+        #        if event.key == pg.K_m:
+        #            self.game.current_state = 'gameplay'
+    def update(self):
+        pass

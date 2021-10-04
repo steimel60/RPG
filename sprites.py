@@ -447,6 +447,19 @@ class Textbox():
     def update(self):
         self.check_game()
 
+class SideMenu():
+    def __init__(self, game):
+        #self.groups = game.all_sprites, game.textbox
+        #pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = pg.Surface((300,600))
+        self.image.fill(WHITE)
+        self.font = pg.font.Font('freesansbold.ttf', 12)
+
+    def clear(self):
+        self.image.fill(WHITE)
+
+
 class InventoryBox():
     def __init__(self, game):
         #self.groups = game.all_sprites, game.textbox
