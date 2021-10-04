@@ -15,7 +15,7 @@ class TestQuest():
         if self.check_prereqs():
             self.active = True
             self.game.textbox.draw_box()
-            self.game.textbox.draw_text(self.initialDialog)
+            self.game.textbox.draw_dialogue(self.giver, self.initialDialog)
             self.activeSpeakers = ['Logan', 'DJ']
 
     def check_prereqs(self):
@@ -49,19 +49,19 @@ class TestQuest():
     def talk_to_dj(self):
         dialog = f"Hm.. I wonder what Logan wants"
         self.game.textbox.draw_box()
-        self.game.textbox.draw_text(dialog)
+        self.game.textbox.draw_dialogue('DJ', dialog)
         self.talkedToDJ = True
         self.activeSpeakers = ['Logan']
 
     def logan_in_progress_dialog(self):
         dialog = f"You still need to find DJ"
         self.game.textbox.draw_box()
-        self.game.textbox.draw_text(dialog)
+        self.game.textbox.draw_dialogue('Logan', dialog)
 
     def logan_quest_complete(self):
         dialog = f"Thanks! Take this chocolate frog card."
         self.game.textbox.draw_box()
-        self.game.textbox.draw_text(dialog)
+        self.game.textbox.draw_dialogue('Logan', dialog)
         self.game.player.inventory.append('Neville Longbottom Card')
         self.complete = True
 
@@ -82,7 +82,7 @@ class TradeWithLoren():
         if self.check_prereqs():
             self.active = True
             self.game.textbox.draw_box()
-            self.game.textbox.draw_text(self.initialDialog)
+            self.game.textbox.draw_dialogue(self.giver, self.initialDialog)
             self.activeSpeakers = ['Loren']
 
     def check_prereqs(self):
@@ -106,6 +106,6 @@ class TradeWithLoren():
     def be_asked_to_trade(self):
         dialog = "Let's trade cards!"
         self.game.textbox.draw_box()
-        self.game.textbox.draw_text(dialog)
+        self.game.textbox.draw_dialogue('Loren', dialog)
         self.talkedToDJ = True
         self.activeSpeakers = ['Loren']
