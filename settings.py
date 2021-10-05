@@ -28,7 +28,7 @@ GRIDHEIGHT = screenHeight / TILESIZE
 
 # Player Settings
 WALK_SPEED = 2
-RUN_SPEED = 4
+BROOM_SPEED = 4
 skin_colors = [(245,185,158),(234,154,95),(127,67,41)]
 
 #

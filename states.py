@@ -17,7 +17,8 @@ class GameplayState():
                 if event.key == pg.K_SPACE:
                     self.game.player.check_for_interactions()
                 if event.key == pg.K_i:
-                    self.game.inventory.switch()
+                    self.game.current_state = 'menu'
+                    self.game.STATE_DICT['menu'].open_inventory()
                 if event.key == pg.K_m:
                     self.game.current_state = 'menu'
             keys = pg.key.get_pressed()
@@ -30,13 +31,11 @@ class GameplayState():
         for sprite in self.game.all_sprites:
             self.game.screen.blit(sprite.image, self.game.camera.apply(sprite))
         self.game.screen.blit(self.game.textbox.image, (20,500))
-        self.game.screen.blit(self.game.inventory.image, (800,30))
         pg.display.flip()
 
     def update(self):
         self.game.all_sprites.update()
         self.game.textbox.update()
-        self.game.inventory.update()
         self.game.camera.update(self.game.player)
         self.game.check_level()
 
@@ -217,7 +216,7 @@ class ShopState():
         item = item_list[self.selectionCount]
         self.purchased_item = item_list[self.selectionCount]
         #get item cost
-        cost = self.items[self.purchased_item]
+        cost = self.items[item]
         cost_knuts = cost[0]*493 + cost[1]* 29 + cost[2]
         #get player money
         galleons = self.game.player.galleons
@@ -243,7 +242,6 @@ class ShopState():
             print(f'{galleons} galleons')
             print(f'{sickles} sickles')
             print(f'{knuts} knuts')
-            self.text = f"Enjoy your {self.purchased_item}"
             self.game.player.inventory.append(self.purchased_item)
             #set player money
             self.game.player.galleons = galleons
@@ -261,7 +259,7 @@ class ShopState():
             self.dialog_state = 'dialog'
         if self.text == 'Would you like to continue shopping?' and self.ans == 'no':
             self.dialog_state = 'dialog'
-            self.text = f'Enjoy your {self.purchased_item}!'
+            self.text = f'Enjoy your {self.purchased_item.name}!'
             self.draw()
             self.wait_for_key_up()
             self.close_shop()
@@ -303,35 +301,12 @@ class MenuState():
     def draw(self):
         self.menu_dict[self.menu_state].draw()
     #Create dict of menus (inventory, spells, etc.)
-
+    def open_inventory(self):
+        self.menu_state = 'Inventory'
     #Main menu lists other menus
     #Selected Menu (new state) then displayed
     #Get Events
     def events(self):
         self.menu_dict[self.menu_state].events()
-        #for event in pg.event.get():
-        #    if event.type == pg.QUIT:
-        #        self.game.quit()
-        #    if event.type == pg.KEYDOWN:
-        #        if event.key == pg.K_ESCAPE:
-        #            self.game.quit()
-        #    if event.type == pg.KEYUP:
-        #        if event.key == pg.K_DOWN or event.key == pg.K_s:
-        #            if not self.selection:
-        #                self.selection = True
-        #                self.selectionCount -= 1
-        #            self.selectionCount += 1
-        #            if self.selectionCount > len(self.items)-1:
-        #                self.selectionCount=0
-                #scroll up
-        #        if event.key == pg.K_UP or event.key == pg.K_w:
-        #            if not self.selection:
-        #                self.selection = True
-        #                self.selectionCount += 1
-        #            self.selectionCount -= 1
-        #            if self.selectionCount < 0:
-        #                self.selectionCount = len(self.items)-1
-        #        if event.key == pg.K_m:
-        #            self.game.current_state = 'gameplay'
     def update(self):
         pass

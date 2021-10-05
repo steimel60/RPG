@@ -1,8 +1,10 @@
+from items import *
+
 class TestQuest():
     def __init__(self, game):
         self.game = game
         self.active = False
-        self.name = 'Quest 1'
+        self.name = "Logan's Friend"
         self.prereqs = []
         self.giver = 'Logan'
         self.activeSpeakers = [self.giver]
@@ -62,15 +64,15 @@ class TestQuest():
         dialog = f"Thanks! Take this chocolate frog card."
         self.game.textbox.draw_box()
         self.game.textbox.draw_dialogue('Logan', dialog)
-        self.game.player.inventory.append('Neville Longbottom Card')
+        self.game.player.inventory.append(ChocolateFrogCard('Neville Longbottom'))
         self.complete = True
 
 class TradeWithLoren():
     def __init__(self, game):
         self.game = game
         self.active = False
-        self.name = 'Trade with Loren'
-        self.prereqs = ['Quest 1']
+        self.name = 'Trade Cards'
+        self.prereqs = None
         self.giver = 'Loren'
         self.activeSpeakers = [self.giver]
         self.initialDialog = 'Is that a chocolate frog?'
@@ -86,13 +88,7 @@ class TradeWithLoren():
             self.activeSpeakers = ['Loren']
 
     def check_prereqs(self):
-        prereqs_met = False
-        for quest in self.game.quests:
-            if quest.name in self.prereqs:
-                if quest.complete == True:
-                    prereqs_met = True
-        if len(self.prereqs) == 0:
-            prereqs_met = True
+        prereqs_met = any(isinstance(x, ChocolateFrogCard) for x in self.game.player.inventory)
         return prereqs_met
 
     def get_quest_dialog(self, name):

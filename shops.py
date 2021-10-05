@@ -1,5 +1,6 @@
 import pygame as pg
 from settings import *
+from items import *
 import random
 
 shopList = []
@@ -95,7 +96,7 @@ class WandShop():
             wand_found = self.try_wand(try_count)
             if wand_found:
                 state.text = f"Yes! That is the one!"
-                state.purchased_item = f'{wood} Wand'
+                state.purchased_item = Wand(wood, core, length, flex)
                 state.draw()
                 self.wait_for_key_up(state)
             else:

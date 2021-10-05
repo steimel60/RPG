@@ -18,6 +18,7 @@ class Game:
         pg.key.set_repeat(250,100)
         self.load_data('test')
         self.player = None
+        self.main_quests = self.init_main_quests()
         self.quests = self.init_quests()
         self.menus = []
         self.shop = None
@@ -32,6 +33,11 @@ class Game:
         quest1 = TestQuest(self)
         quest2 = TradeWithLoren(self)
         quests = [quest1, quest2]
+
+        return quests
+
+    def init_main_quests(self):
+        quests = []
 
         return quests
 
@@ -89,10 +95,7 @@ class Game:
         #Set Others
         self.camera = Camera(self.map.width, self.map.height)
         self.textbox = Textbox(self, self.player.x, self.player.y)
-        self.inventory = InventoryBox(self)
         self.side_menu = SideMenu(self)
-        self.menus = [self.inventory]
-
     def check_level(self):
         for door in self.doors:
             for player in self.user_group:
