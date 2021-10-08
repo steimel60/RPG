@@ -215,7 +215,6 @@ class SpellScroll(SpellBook):
         game.SpellHandler.learn_spell(self.spell)
         print(f"You now know how to cast {self.spell.name}!")
 
-
 class Spell():
     def __init__(self):
         pass

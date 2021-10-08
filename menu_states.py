@@ -421,7 +421,7 @@ class SpellsState():
                     self.game.quit()
             if event.type == pg.KEYUP:
                 if event.key == pg.K_DOWN or event.key == pg.K_s:
-                    if not self.selection:
+                    if not self.selection and len(self.game.SpellHandler.known_spells) > 0:
                         self.selection = True
                         self.selectionCount -= 1
                     self.selectionCount += 1
@@ -429,7 +429,7 @@ class SpellsState():
                         self.selectionCount=0
                 #scroll up
                 if event.key == pg.K_UP or event.key == pg.K_w:
-                    if not self.selection:
+                    if not self.selection and len(self.game.SpellHandler.known_spells) > 0:
                         self.selection = True
                         self.selectionCount += 1
                     self.selectionCount -= 1
@@ -538,21 +538,24 @@ class QuestGuideState():
                 if event.key == pg.K_ESCAPE:
                     self.game.quit()
             if event.type == pg.KEYUP:
-                if event.key == pg.K_DOWN or event.key == pg.K_s:
-                    if not self.selection:
-                        self.selection = True
-                        self.selectionCount -= 1
-                    self.selectionCount += 1
-                    if self.selectionCount > len([quest for quest in self.game.main_quests if quest.active]) + len([quest for quest in self.game.quests if quest.active])-1:
-                        self.selectionCount=0
-                #scroll up
-                if event.key == pg.K_UP or event.key == pg.K_w:
-                    if not self.selection:
-                        self.selection = True
+                #only scroll if there are any active quests
+                if len([quest for quest in self.game.main_quests if quest.active]) + len([quest for quest in self.game.quests if quest.active]) > 0:
+                    #Scroll Down
+                    if event.key == pg.K_DOWN or event.key == pg.K_s:
+                        if not self.selection:
+                            self.selection = True
+                            self.selectionCount -= 1
                         self.selectionCount += 1
-                    self.selectionCount -= 1
-                    if self.selectionCount < 0:
-                        self.selectionCount = len([quest for quest in self.game.main_quests if quest.active]) + len([quest for quest in self.game.quests if quest.active])-1
+                        if self.selectionCount > len([quest for quest in self.game.main_quests if quest.active]) + len([quest for quest in self.game.quests if quest.active])-1:
+                            self.selectionCount=0
+                    #scroll up
+                    if event.key == pg.K_UP or event.key == pg.K_w:
+                        if not self.selection:
+                            self.selection = True
+                            self.selectionCount += 1
+                        self.selectionCount -= 1
+                        if self.selectionCount < 0:
+                            self.selectionCount = len([quest for quest in self.game.main_quests if quest.active]) + len([quest for quest in self.game.quests if quest.active])-1
                 if event.key == pg.K_LEFT or event.key == pg.K_a:
                     self.selection = False
                     self.selectionCount = 0
