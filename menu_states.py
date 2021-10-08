@@ -231,6 +231,7 @@ class InventoryState():
             #Draw Selection Box then text
         self.action_box.blit(selectionBox, (self.act_box_font_locs[self.act_box_sel_count]))
         self.action_box.blit(text, (self.act_box_font_locs[self.act_box_sel_count]))
+        self.selected_action = action
 
     def equip(self, item):
         if isinstance(item, Equippable):
@@ -325,7 +326,8 @@ class InventoryState():
                 if event.type == pg.KEYUP:
                     if event.key == pg.K_SPACE:
                         #select action here
-                        pass
+                        #self.selected_item.action_dict[self.selected_action]
+                        self.game.ItemHandler.do_action(self.selected_item, self.selected_action)
                     if event.key == pg.K_RIGHT or event.key == pg.K_d:
                         self.action_box = pg.Surface((0,0))
                         self.act_box_sel_count = 0
@@ -356,7 +358,7 @@ class InventoryState():
                         hit_space = True
         self.inv_state = state
 
-class SpellbookState():
+class SpellsState():
     def __init__(self, menu, game):
         self.game = game
         self.menu = menu
@@ -365,9 +367,13 @@ class SpellbookState():
         self.fontLocs = []
 
     def draw(self):
+        self.game.screen.blit(self.game.map_img, self.game.camera.apply_rect(self.game.map_rect))
+        self.game.draw_grid()
+        for sprite in self.game.all_sprites:
+            sprite.draw(self.game)
         self.game.side_menu.clear()
         self.draw_text()
-        #self.draw_selection_box()
+        self.draw_selection_box()
         self.game.screen.blit(self.game.textbox.image, (20,500))
         self.game.screen.blit(self.game.side_menu.image, (800,30))
         pg.display.flip()
@@ -382,6 +388,29 @@ class SpellbookState():
         self.game.side_menu.image.blit(text, (blitLoc[0]+25,blitLoc[1]))
         blitLoc[1] += height
         font = pg.font.Font('freesansbold.ttf', 12)
+        for spell in self.game.SpellHandler.known_spells:
+            text = font.render(spell.name, True, BLACK, WHITE)
+            height = font.size(spell.name)[1]
+            self.game.side_menu.image.blit(text, (blitLoc[0]+10,blitLoc[1]))
+            locs.append((blitLoc[0]+10,blitLoc[1]))
+            blitLoc[1] += height
+        self.fontLocs = locs
+
+    def draw_selection_box(self):
+        if self.selection == True:
+            spells = [spell for spell in self.game.SpellHandler.known_spells]
+            spell_names = [spell.name for spell in spells]
+            spell = spell_names[self.selectionCount]
+            #Get font and font data
+            font = pg.font.Font('freesansbold.ttf', 12)
+            text = font.render(spell, True, WHITE, BLACK)
+            textRect = text.get_rect()
+            height = font.size(spell)[1]
+            selectionBox = pg.Surface((300,height))
+            #Draw Selection Box then text
+            self.game.side_menu.image.blit(selectionBox, (0,self.fontLocs[self.selectionCount][1]))
+            self.game.side_menu.image.blit(text, (10,self.fontLocs[self.selectionCount][1]))
+            self.selected_spell = spells[self.selectionCount]
 
     def events(self):
         for event in pg.event.get():
@@ -396,7 +425,7 @@ class SpellbookState():
                         self.selection = True
                         self.selectionCount -= 1
                     self.selectionCount += 1
-                    if self.selectionCount > len(self.menu.menu_dict.keys())-2:
+                    if self.selectionCount > len(self.game.SpellHandler.known_spells)-1:
                         self.selectionCount=0
                 #scroll up
                 if event.key == pg.K_UP or event.key == pg.K_w:
@@ -405,7 +434,11 @@ class SpellbookState():
                         self.selectionCount += 1
                     self.selectionCount -= 1
                     if self.selectionCount < 0:
-                        self.selectionCount = len(self.menu.menu_dict.keys())-2
+                        self.selectionCount = len(self.game.SpellHandler.known_spells)-1
+
+                if event.key == pg.K_SPACE:
+                    self.game.SpellHandler.cast(self.selected_spell)
+
                 if event.key == pg.K_LEFT or event.key == pg.K_a:
                     self.selection = False
                     self.selectionCount = 0

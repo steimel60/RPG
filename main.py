@@ -6,6 +6,7 @@ from Quests import *
 from sprites import *
 from tilemap import *
 from shops import *
+from handlers import *
 import random
 
 class Game:
@@ -28,6 +29,9 @@ class Game:
             'menu' : states.MenuState(self)
         }
         self.current_state = 'gameplay'
+        #Handlers
+        self.ItemHandler = ItemHandler(self)
+        self.SpellHandler = SpellHandler(self)
 
     def init_quests(self):
         quest1 = TestQuest(self)
@@ -102,6 +106,7 @@ class Game:
         self.camera = Camera(self.map.width, self.map.height)
         self.textbox = Textbox(self, self.player.x, self.player.y)
         self.side_menu = SideMenu(self)
+
 
     def check_level(self):
         for door in self.doors:

@@ -9,6 +9,7 @@ class Item():
         self.details = {} #Dict of Item details
         self.icon = None #Inventory icon
         self.actions = ['Details','Destroy']
+        self.action_dict = {}
 
     def print_details(self):
         details = self.get_details()
@@ -208,7 +209,12 @@ class SpellScroll(SpellBook):
         super().__init__()
         self.spell = spell
         self.name = f"{self.spell.name} Scroll"
-        self.actions += ['Read']
+        self.actions += ['Read', 'Learn Spell']
+
+    def learn_spell(self, game):
+        game.SpellHandler.learn_spell(self.spell)
+        print(f"You now know how to cast {self.spell.name}!")
+
 
 class Spell():
     def __init__(self):
@@ -221,8 +227,12 @@ class Alohamora(Spell):
         self.level = 1
 
     def cast(self, item):
-        if item.locked:
-            item.locked = False
+        try:
+            if item.locked:
+                item.locked = False
+                item.update()
+        except:
+            pass
 
 
 wand = Wand('Larch', 'Dragon Heartstring', '11 inches', 'Swishy')

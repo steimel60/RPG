@@ -295,7 +295,7 @@ class MenuState():
         self.menu_dict = {
                 'main' : SideMenuMainState(self, self.game),
                 'Inventory' : InventoryState(self, self.game),
-                'Spellbooks' : SpellbookState(self, self.game),
+                'Spells' : SpellsState(self, self.game),
                 'Quest Guide' : QuestGuideState(self, self.game),
                 'Save' : SaveState(self, self.game)
         }
