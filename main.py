@@ -33,7 +33,6 @@ class Game:
         quest1 = TestQuest(self)
         quest2 = TradeWithLoren(self)
         quests = [quest1, quest2]
-
         return quests
 
     def init_main_quests(self):
@@ -57,6 +56,7 @@ class Game:
         self.walls = pg.sprite.Group()
         self.npcs = pg.sprite.Group()
         self.walk_paths = pg.sprite.Group()
+        self.gates = pg.sprite.Group()
         self.shops = []
         #Load Data from Tiled Map
         for tile_object in self.map.tmxdata.objects:
@@ -68,12 +68,14 @@ class Game:
             if tile_object.name == "door":
                 self.door = Door(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.door_id, tile_object.to_level, tile_object.exit_dir)
             if tile_object.name == "NPC":
-                self.npc = NPC(self, tile_object.x, tile_object.y, tile_object.path_id, tile_object.name_id, tile_object.skin_id, tile_object.hair_id, tile_object.hair_color)
+                self.npc = NPC(self, tile_object.dir, tile_object.x, tile_object.y, tile_object.path_id, tile_object.name_id, tile_object.skin_id, tile_object.hair_id, tile_object.hair_color)
             if tile_object.name == "walk_path":
                 self.walk_path = Walk_Path(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.path_id)
             if tile_object.name == "shop":
                 self.loaded_shop = Shop(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.shop_id)
                 self.shops.append(self.loaded_shop)
+            if tile_object.name == "gate":
+                self.loaded_shop = Gate(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.level, tile_object.locked)
         #Load Level by Door Data
         if from_door[0]:
             #Check if player went through door
@@ -83,19 +85,24 @@ class Game:
                     if from_door[2] == 'up':
                         self.player = Player(self, door.x, door.y-TILESIZE, inventory=self.player.inventory, money=(self.player.galleons,self.player.sickles,self.player.knuts))
                         self.player.dir = 1
+                        self.player.equipped_effects()
                     elif from_door[2] == 'down':
                         self.player = Player(self, door.x, door.y+TILESIZE, inventory=self.player.inventory, money=(self.player.galleons,self.player.sickles,self.player.knuts))
                         self.player.dir = 0
+                        self.player.equipped_effects()
                     elif from_door[2] == 'left':
                         self.player = Player(self, door.x-TILESIZE, door.y, inventory=self.player.inventory, money=(self.player.galleons,self.player.sickles,self.player.knuts))
                         self.player.dir = 2
+                        self.player.equipped_effects()
                     elif from_door[2] == 'right':
                         self.player = Player(self, door.x+TILESIZE, door.y, inventory=self.player.inventory, money=(self.player.galleons,self.player.sickles,self.player.knuts))
                         self.player.dir = 3
+                        self.player.equipped_effects()
         #Set Others
         self.camera = Camera(self.map.width, self.map.height)
         self.textbox = Textbox(self, self.player.x, self.player.y)
         self.side_menu = SideMenu(self)
+
     def check_level(self):
         for door in self.doors:
             for player in self.user_group:

@@ -3,15 +3,13 @@ from settings import *
 from items import *
 import random
 
-shopList = []
-def get_shop(shop_id):
-    if shop_id == 'wandshop1':
-        return WandShop()
 class Shop():
     def __init__(self, game, x, y, h, w, shop_id):
         self.game = game
         self.shop_id = shop_id
-        self.shop = get_shop(shop_id)
+        self.shop_dict = {'wandshop1' : WandShop(),
+                        'bookshop1' : BookShop()}
+        self.shop = self.shop_dict[self.shop_id]
         self.x = x
         self.y = y
         self.h = h
@@ -24,6 +22,9 @@ class Shop():
         self.game.shop = self
         print(f'Opening Shop {self.shop}')
         self.game.current_state = 'shop'
+
+    def check_for_special_buy(self):
+        return False
 
     def update(self):
         #self.gui.update()
@@ -44,7 +45,7 @@ class WandShop():
         return True
     def check_prereqs(self):
         pass
-    def check_for_special_buy(self, item):
+    def check_for_special_buy(self):
         return True
     def special_buy(self, state, item):
         state.text = "Let's see... the wand chooses the wizard you know"
@@ -113,3 +114,16 @@ class WandShop():
 
     def run(self):
         pass
+
+class BookShop(Shop):
+    def __init__(self):
+        self.tiled_id = 'bookshop1'
+        self.name = "Spellbook Shop"
+        self.clerk = 'Dr. Booksy'
+        self.items = {
+                    'Alohamora Scroll':
+                            {'Item': SpellScroll(Alohamora()),
+                            'cost':(0,0,1)},
+                    'Advanced Spellbook':
+                            {'cost':(10,0,0)}
+                            }

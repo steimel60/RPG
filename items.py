@@ -8,20 +8,31 @@ class Item():
         self.name = '' #Specific Item name Ex) Larch Wand
         self.details = {} #Dict of Item details
         self.icon = None #Inventory icon
-        self.image = None #Specific item image
+        self.actions = ['Details','Destroy']
 
     def print_details(self):
         details = self.get_details()
         for detail in details:
             print(f'{detail}: {details[detail]}')
 
-    def is_equippable(self):
-        return isinstance(self,Equippable)
-
-    def is_armor(self):
-        return isinstance(self,Armor)
-
 class Equippable(Item):
+    '''
+    Equippables are items that may be equipped to a character
+    '''
+    def __init__(self):
+        super().__init__()
+        self.actions += ['Equip']
+
+    def equip_effect(self, game):
+        pass
+
+    def unequip_effect(self, game):
+        pass
+
+class Wearable(Equippable):
+    '''
+    Wearables are Equippables that have images
+    '''
     def __init__(self):
         super().__init__()
 
@@ -29,11 +40,33 @@ class Consumable(Item):
     def __init__(self):
         super().__init__()
 
-class Armor(Equippable):
+class Food(Consumable):
+    def __init__(self):
+        super().__init__()
+        self.actions += ['Eat']
+
+class Drink(Consumable):
+    def __init__(self):
+        super().__init__()
+        self.actions += ['Drink']
+
+class Armor(Wearable):
     def __init__(self):
         super().__init__()
 
-class Wand(Equippable):
+class Book(Item):
+    def __init__(self):
+        super().__init__()
+
+class SpellBook(Item):
+    def __init__(self):
+        super().__init__()
+
+class Interactable(Item):
+    def __init__(self):
+        super().__init__()
+
+class Wand(Wearable):
     def __init__(self, wood, core, length, flex, maker=None):
         super().__init__()
         #Wand Details
@@ -71,20 +104,10 @@ class Wand(Equippable):
         return details
 
     def equip_effect(self, game):
-        for i in range(0,len(game.player.images)):
-            for j in range(0,len(game.player.images[i])):
-                game.player.images[i][j].blit(self.images[i][j], (0,0))
+        game.player.wand = self
 
     def unequip_effect(self, game):
-        walk_down_img = [path.join(img_folder, 'f1.png'), path.join(img_folder, 'f2.png'), path.join(img_folder, 'f3.png'), path.join(img_folder, 'f4.png')]
-        walk_up_img = [path.join(img_folder, 'b1.png'), path.join(img_folder, 'b2.png'), path.join(img_folder, 'b3.png'), path.join(img_folder, 'b4.png')]
-        walk_left_img = [path.join(img_folder, 'l1.png'), path.join(img_folder, 'l2.png'), path.join(img_folder, 'l3.png'), path.join(img_folder, 'l4.png')]
-        walk_right_img = [path.join(img_folder, 'r1.png'), path.join(img_folder, 'r2.png'), path.join(img_folder, 'r3.png'), path.join(img_folder, 'r4.png')]
-        npc_down = [pg.image.load(walk_down_img[0]), pg.image.load(walk_down_img[1]), pg.image.load(walk_down_img[2]), pg.image.load(walk_down_img[3])]
-        npc_up = [pg.image.load(walk_up_img[0]), pg.image.load(walk_up_img[1]), pg.image.load(walk_up_img[2]), pg.image.load(walk_up_img[3])]
-        npc_left = [pg.image.load(walk_left_img[0]), pg.image.load(walk_left_img[1]), pg.image.load(walk_left_img[2]), pg.image.load(walk_left_img[3])]
-        npc_right = [pg.image.load(walk_right_img[0]), pg.image.load(walk_right_img[1]), pg.image.load(walk_right_img[2]), pg.image.load(walk_right_img[3])]
-        game.player.images = [npc_down, npc_up, npc_left, npc_right]
+        game.player.wand = None
 
     def change_color(self):
         new_color = random.choice([(222,184,135),(244,164,96),(139,69,19)])
@@ -126,7 +149,7 @@ class Cloak(Armor):
     def unequip_effect(self, game):
         pass
 
-class InvisibilityCloak(Armor):
+class InvisibilityCloak(Equippable):
     def __init__(self):
         super().__init__()
         self.name = 'Invisibility Cloak'
@@ -136,12 +159,24 @@ class InvisibilityCloak(Armor):
         for img_list in game.player.images:
             for img in img_list:
                 img.set_alpha(100)
+        #Change equipped item images
+        for item in [game.player.hat, game.player.shirt, game.player.cloak, game.player.wand]:
+            if item != None:
+                for img_list in item.images:
+                    for img in img_list:
+                        img.set_alpha(100)
 
     def unequip_effect(self, game):
         game.player.invisible = False
         for img_list in game.player.images:
             for img in img_list:
                 img.set_alpha(255)
+        #Change equipped item images
+        for item in [game.player.hat, game.player.shirt, game.player.cloak, game.player.wand]:
+            if item != None:
+                for img_list in item.images:
+                    for img in img_list:
+                        img.set_alpha(255)
 
 class Cauldron(Item):
     def __init__(self, name):
@@ -150,7 +185,7 @@ class Cauldron(Item):
     def get_details(self):
         return {}
 
-class PumpkinJuice(Consumable):
+class PumpkinJuice(Drink):
     def __init__(self):
         super().__init__()
         self.name = 'Pumpkin Juice'
@@ -164,11 +199,35 @@ class ChocolateFrogCard(Item):
     def get_details(self):
         return {}
 
+class BasicSpellBook(SpellBook):
+    def __init__(self):
+        super().__init__()
+
+class SpellScroll(SpellBook):
+    def __init__(self, spell):
+        super().__init__()
+        self.spell = spell
+        self.name = f"{self.spell.name} Scroll"
+        self.actions += ['Read']
+
+class Spell():
+    def __init__(self):
+        pass
+
+class Alohamora(Spell):
+    def __init__(self):
+        super().__init__()
+        self.name = 'Alohamora'
+        self.level = 1
+
+    def cast(self, item):
+        if item.locked:
+            item.locked = False
+
 
 wand = Wand('Larch', 'Dragon Heartstring', '11 inches', 'Swishy')
 cauldron = Cauldron('Black Cauldron')
 cloak = InvisibilityCloak()
 broom = Broom('Nimbus 2000')
 juice = PumpkinJuice()
-test_inventory = [cauldron, cloak, broom]
-print(isinstance(cloak, Equippable))
+test_inventory = [cauldron, cloak, broom, juice]

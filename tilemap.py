@@ -33,6 +33,9 @@ class Door(pg.sprite.Sprite):
         self.to_level = to_level
         self.exit_dir = exit_dir
 
+    def draw(self, game):
+        pass
+
 
 class TiledMap:
     def __init__(self, filename):

@@ -21,6 +21,9 @@ class GameplayState():
                     self.game.STATE_DICT['menu'].open_inventory()
                 if event.key == pg.K_m:
                     self.game.current_state = 'menu'
+                if event.key == pg.K_g:
+                    for gate in self.game.gates:
+                        gate.locked = False
             keys = pg.key.get_pressed()
                 #if keys[pg.K_c]:
                     #skin_select(self)
@@ -29,7 +32,7 @@ class GameplayState():
         self.game.screen.blit(self.game.map_img, self.game.camera.apply_rect(self.game.map_rect))
         self.game.draw_grid()
         for sprite in self.game.all_sprites:
-            self.game.screen.blit(sprite.image, self.game.camera.apply(sprite))
+            sprite.draw(self.game)
         self.game.screen.blit(self.game.textbox.image, (20,500))
         pg.display.flip()
 
@@ -227,8 +230,10 @@ class ShopState():
         if cost_knuts > player_knuts:
             self.text = "You don't have enough money for that!"
         else:
-            if self.shop.shop.check_for_special_buy(self.purchased_item):
+            if self.shop.shop.check_for_special_buy():
                 self.shop.shop.special_buy(self, self.purchased_item)
+            else:
+                self.purchased_item = self.shop.shop.items[item]['Item']
             #pay and recieve item
             remaining_knuts = player_knuts - cost_knuts
             galleons = remaining_knuts // 493
@@ -267,6 +272,7 @@ class ShopState():
     def close_shop(self):
         self.text = None
         self.selection = False
+        self.shop = None
         self.selectionCount = 0
         self.purchased_item = None
         self.game.shop = None

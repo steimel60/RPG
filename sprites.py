@@ -41,6 +41,12 @@ class Player(pg.sprite.Sprite):
         self.x = x
         self.y = y
         self.invisible = False
+        #Wearables
+        self.hat = None
+        self.cloak = None
+        self.shirt = None
+        self.pants = None
+        self.wand = None
         #Movement
         self.speed = WALK_SPEED
         self.target_x = x
@@ -105,7 +111,6 @@ class Player(pg.sprite.Sprite):
             self.dir = 0
             self.moving = True
 
-
     def collide_with_walls(self):
         for wall in self.game.walls:
             if wall.x <= self.target_x <= (wall.x + wall.w-TILESIZE) and wall.y <= self.target_y <= (wall.y + wall.h-TILESIZE):
@@ -119,14 +124,27 @@ class Player(pg.sprite.Sprite):
                 return True
         return False
 
+    def collide_with_gates(self):
+        for gate in self.game.gates:
+            if gate.locked:
+                if gate.x <= self.target_x <= (gate.x + gate.w-TILESIZE) and gate.y <= self.target_y <= (gate.y + gate.h-TILESIZE):
+                    return True
+        return False
+
     def collides(self):
-        if self.collide_with_npc() or self.collide_with_walls():
+        if self.collide_with_npc() or self.collide_with_walls() or self.collide_with_gates():
             return True
         return False
 
     def get_image(self):
         self.images[self.dir][self.walk_count // 6].blit(self.hair[self.dir], (0,0))
         self.image = self.images[self.dir][self.walk_count // 6]
+
+    def draw(self, game):
+        game.screen.blit(self.image, self.game.camera.apply(self))
+        for item in [self.hat, self.shirt, self.cloak, self.wand]:
+            if item != None:
+                game.screen.blit(item.images[self.dir][self.walk_count // 6], self.game.camera.apply(self))
 
     def check_for_interactions(self):
         #Check NPCS
@@ -168,9 +186,11 @@ class Player(pg.sprite.Sprite):
                 if shop.x == self.x + TILESIZE and shop.y == self.y:
                     shop.check_interactions()
 
-    def update(self):
+    def equipped_effects(self):
         for item in self.equipped:
             item.equip_effect(self.game)
+
+    def update(self):
         self.get_keys()
         self.collides()
         self.get_image()
@@ -180,7 +200,7 @@ class Player(pg.sprite.Sprite):
         self.get_image()
 
 class NPC(pg.sprite.Sprite):
-    def __init__(self, game, x, y, path_id, name, skin_id, hair_id, hair_color):
+    def __init__(self, game, dir, x, y, path_id, name, skin_id, hair_id, hair_color):
         ### Load Images ###
         npc_down = [pg.image.load(walk_down_img[0]), pg.image.load(walk_down_img[1]), pg.image.load(walk_down_img[2]), pg.image.load(walk_down_img[3])]
         npc_up = [pg.image.load(walk_up_img[0]), pg.image.load(walk_up_img[1]), pg.image.load(walk_up_img[2]), pg.image.load(walk_up_img[3])]
@@ -211,7 +231,7 @@ class NPC(pg.sprite.Sprite):
         self.moving_left = False
         self.moving_right = False
         self.walk_count = 0
-        self.dir = 0
+        self.dir = dir
         self.path_id = path_id
         self.initial_collide = False
         self.collide_wait = False
@@ -219,6 +239,12 @@ class NPC(pg.sprite.Sprite):
         ### Unique IDs ###
         self.name = name
         self.introduced = False
+        #Wearables
+        self.hat = None
+        self.cloak = None
+        self.shirt = None
+        self.pants = None
+        self.wand = None
 
     def move(self):
         if self.walk_count + 1 > 23:
@@ -372,6 +398,12 @@ class NPC(pg.sprite.Sprite):
         self.images[self.dir][self.walk_count // 6].blit(self.hair[self.dir], (0,0))
         self.image = self.images[self.dir][self.walk_count // 6]
 
+    def draw(self, game):
+        game.screen.blit(self.image, self.game.camera.apply(self))
+        for item in [self.hat, self.shirt, self.cloak, self.wand]:
+            if item != None:
+                game.screen.blit(item.images[self.dir][self.walk_count // 6], self.game.camera.apply(self))
+
     def update(self):
         self.find_path()
         self.collides()
@@ -472,3 +504,35 @@ class SideMenu():
 
     def clear(self):
         self.image.fill(WHITE)
+
+class Gate(pg.sprite.Sprite, Interactable):
+    def __init__(self, game, x, y, w, h, level, locked):
+        super().__init__()
+        self.groups = game.gates, game.all_sprites
+        pg.sprite.Sprite.__init__(self, self.groups)
+        ### Surface and Collision Rect ###
+        self.image = pg.Surface((TILESIZE, TILESIZE))
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        #Gate info
+        self.level = level
+        self.locked = locked
+        self.open_image =  pg.image.load(path.join(img_folder, 'open_gate.png'))
+        self.closed_image =  pg.image.load(path.join(img_folder, 'closed_gate.png'))
+
+    def get_image(self):
+        if self.locked:
+            self.image = self.closed_image
+        elif not self.locked:
+            self.image = self.open_image
+
+    def draw(self, game):
+        game.screen.blit(self.image, game.camera.apply(self))
+
+    def update(self):
+        self.get_image()
