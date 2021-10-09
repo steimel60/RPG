@@ -134,9 +134,9 @@ class ShopState():
         self.menu_image.fill(WHITE)
 
     def draw_text(self):
-        galleons = self.game.player.galleons
-        sickles = self.game.player.sickles
-        knuts = self.game.player.knuts
+        galleons = self.game.ItemHandler.galleons
+        sickles = self.game.ItemHandler.sickles
+        knuts = self.game.ItemHandler.knuts
         font = self.font
         bigfont = pg.font.Font(f'{font_folder}/MagicFont.ttf', 36)
         blitLoc = [10,0]
@@ -222,11 +222,11 @@ class ShopState():
         cost = self.items[item]
         cost_knuts = cost[0]*493 + cost[1]* 29 + cost[2]
         #get player money
-        galleons = self.game.player.galleons
-        sickles = self.game.player.sickles
-        knuts = self.game.player.knuts
+        galleons = self.game.ItemHandler.galleons
+        sickles = self.game.ItemHandler.sickles
+        knuts = self.game.ItemHandler.knuts
         player_knuts = galleons*493 + sickles*29 + knuts
-        #check if they have enough
+        #check if they have enough money
         if cost_knuts > player_knuts:
             self.text = "You don't have enough money for that!"
         else:
@@ -237,21 +237,15 @@ class ShopState():
             #pay and recieve item
             remaining_knuts = player_knuts - cost_knuts
             galleons = remaining_knuts // 493
-            print(f'{galleons} galleons')
             remaining_knuts -= galleons*493
             sickles = remaining_knuts // 29
-            print(f'{galleons} galleons')
-            print(f'{sickles} sickles')
             remaining_knuts -= sickles*29
             knuts = remaining_knuts
-            print(f'{galleons} galleons')
-            print(f'{sickles} sickles')
-            print(f'{knuts} knuts')
-            self.game.player.inventory.append(self.purchased_item)
+            self.game.ItemHandler.add_item_to_inventory(self.purchased_item)
             #set player money
-            self.game.player.galleons = galleons
-            self.game.player.sickles = sickles
-            self.game.player.knuts = knuts
+            self.game.ItemHandler.galleons = galleons
+            self.game.ItemHandler.sickles = sickles
+            self.game.ItemHandler.knuts = knuts
             self.continue_shopping()
 
     def continue_shopping(self):

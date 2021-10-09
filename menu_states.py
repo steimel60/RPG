@@ -35,7 +35,7 @@ class SideMenuMainState():
                         self.selectionCount = len(self.menu.menu_dict.keys())-2
                 if event.key == pg.K_SPACE:
                     self.select()
-                if event.key == pg.K_m or event.key == pg.K_c:
+                if event.key == pg.K_m or event.key == pg.K_q:
                     self.selection = False
                     self.selectionCount = 0
                     self.menu.close_menu()
@@ -96,6 +96,7 @@ class InventoryState():
         self.selectionCount = 0
         self.fontLocs = []
         self.width = 224
+        self.item_count = 0
         #Action Box
         self.selected_item = None
         self.action_box = pg.Surface((0,0))
@@ -119,6 +120,7 @@ class InventoryState():
         pg.display.flip()
 
     def draw_text(self):
+        self.item_count = 0
         locs = []
         blitLoc = [0,0]
         font = pg.font.Font(f'{font_folder}/MagicFont.ttf', 36)
@@ -129,9 +131,9 @@ class InventoryState():
         blitLoc[1] += height
         font = pg.font.Font('freesansbold.ttf', 12)
         #Get Player Money
-        galleons = self.game.player.galleons
-        sickles = self.game.player.sickles
-        knuts = self.game.player.knuts
+        galleons = self.game.ItemHandler.galleons
+        sickles = self.game.ItemHandler.sickles
+        knuts = self.game.ItemHandler.knuts
         #Draw Money Text
         moneyLabel = "Money"
         text = font.render(moneyLabel, True, BLACK, WHITE)
@@ -154,13 +156,14 @@ class InventoryState():
         size = font.size(itemsLabel)
         self.game.side_menu.image.blit(text, (0,blitLoc[1]))
         blitLoc[1] += size[1]
-        for item in self.game.player.equipped:
+        for item in self.game.ItemHandler.equipped:
             text = font.render(item.name, True, BLACK, WHITE)
             height = font.size(item.name)[1]
             self.game.side_menu.image.blit(text, (blitLoc[0]+10,blitLoc[1]))
             locs.append((blitLoc[0]+10,blitLoc[1]))
             blitLoc[1] += height
-        if len(self.game.player.equipped) == 0:
+            self.item_count += 1
+        if len(self.game.ItemHandler.equipped) == 0:
             text = font.render('No equipped items', True, BLACK, WHITE)
             height = font.size('No equipped items')[1]
             self.game.side_menu.image.blit(text, (blitLoc[0]+10,blitLoc[1]))
@@ -170,18 +173,19 @@ class InventoryState():
         size = font.size(itemsLabel)
         self.game.side_menu.image.blit(text, (0,blitLoc[1]))
         blitLoc[1] += size[1]
-        for item in self.game.player.inventory:
+        for item in self.game.ItemHandler.inventory:
             text = font.render(item.name, True, BLACK, WHITE)
             height = font.size(item.name)[1]
             self.game.side_menu.image.blit(text, (blitLoc[0]+10,blitLoc[1]))
             locs.append((blitLoc[0]+10,blitLoc[1]))
             blitLoc[1] += height
+            self.item_count += 1
         self.fontLocs = locs
 
     def draw_selection_box(self):
         if self.selection == True:
-            items = [item.name for item in self.game.player.equipped]
-            items += [item.name for item in self.game.player.inventory]
+            items = [item.name for item in self.game.ItemHandler.equipped]
+            items += [item.name for item in self.game.ItemHandler.inventory]
             item = items[self.selectionCount]
             #Get font and font data
             font = pg.font.Font('freesansbold.ttf', 12)
@@ -235,15 +239,7 @@ class InventoryState():
 
     def equip(self, item):
         if isinstance(item, Equippable):
-            self.game.player.equipped.append(item)
-            self.game.player.inventory.remove(item)
-            item.equip_effect(self.game)
-            #Change alpha if invisible
-            if isinstance(item, Wearable) and self.game.player.invisible:
-                for img_list in item.images:
-                    for img in img_list:
-                        img.set_alpha(100)
-
+            self.game.ItemHandler.equip_item(item)
         else:
             self.game.textbox.draw_box()
             text = f'{item.name} is not equippable!'
@@ -253,14 +249,7 @@ class InventoryState():
             self.game.textbox.close_box()
 
     def unequip(self, item):
-        self.game.player.equipped.remove(item)
-        self.game.player.inventory.append(item)
-        item.unequip_effect(self.game)
-        #reset alpha if changed
-        if isinstance(item, Wearable) and self.game.player.invisible:
-            for img_list in item.images:
-                for img in img_list:
-                    img.set_alpha(255)
+        self.game.ItemHandler.unequip_item(item)
 
     def events(self):
         if self.inv_state == 'inventory':
@@ -276,12 +265,12 @@ class InventoryState():
                         if not self.selection:
                             self.selection = True
                         else:
-                            if len(self.game.player.equipped) != 0 and self.selectionCount < len(self.game.player.equipped):
-                                self.selected_item = self.game.player.equipped[self.selectionCount]
+                            if len(self.game.ItemHandler.equipped) != 0 and self.selectionCount < len(self.game.ItemHandler.equipped):
+                                self.selected_item = self.game.ItemHandler.equipped[self.selectionCount]
                                 self.open_actions_box(self.selected_item)
                                 self.inv_state = 'action_box'
-                            elif len(self.game.player.inventory) != 0 and self.selectionCount >= len(self.game.player.equipped):
-                                self.selected_item = self.game.player.inventory[self.selectionCount - len(self.game.player.equipped)]
+                            elif len(self.game.ItemHandler.inventory) != 0 and self.selectionCount >= len(self.game.ItemHandler.equipped):
+                                self.selected_item = self.game.ItemHandler.inventory[self.selectionCount - len(self.game.ItemHandler.equipped)]
                                 self.open_actions_box(self.selected_item)
                                 self.inv_state = 'action_box'
                     #Scroll Down
@@ -290,7 +279,7 @@ class InventoryState():
                             self.selection = True
                             self.selectionCount -= 1
                         self.selectionCount += 1
-                        if self.selectionCount > len(self.game.player.inventory)+len(self.game.player.equipped)-1:
+                        if self.selectionCount > self.game.ItemHandler.inventory_length-1:
                             self.selectionCount=0
                     #scroll up
                     if event.key == pg.K_UP or event.key == pg.K_w:
@@ -298,8 +287,8 @@ class InventoryState():
                             self.selection = True
                             self.selectionCount += 1
                         self.selectionCount -= 1
-                        if self.selectionCount < 0:
-                            self.selectionCount = len(self.game.player.inventory)+len(self.game.player.equipped)-1
+                        if self.selectionCount < 0 or self.selectionCount > self.game.ItemHandler.inventory_length-1:
+                            self.selectionCount = self.item_count-1
                     if event.key == pg.K_LEFT or event.key == pg.K_a:
                         self.selection = False
                         self.selectionCount = 0
@@ -307,11 +296,11 @@ class InventoryState():
                     #Equip Item
                     if event.key == pg.K_e:
                         if self.selection:
-                            if len(self.game.player.equipped) != 0 and self.selectionCount < len(self.game.player.equipped):
-                                self.unequip(self.game.player.equipped[self.selectionCount])
-                            elif len(self.game.player.inventory) != 0 and self.selectionCount >= len(self.game.player.equipped):
-                                self.equip(self.game.player.inventory[self.selectionCount - len(self.game.player.equipped)])
-                    if event.key == pg.K_m or event.key == pg.K_c or event.key == pg.K_i:
+                            if len(self.game.ItemHandler.equipped) != 0 and self.selectionCount < len(self.game.ItemHandler.equipped):
+                                self.unequip(self.game.ItemHandler.equipped[self.selectionCount])
+                            elif len(self.game.ItemHandler.inventory) != 0 and self.selectionCount >= len(self.game.ItemHandler.equipped):
+                                self.equip(self.game.ItemHandler.inventory[self.selectionCount - len(self.game.ItemHandler.equipped)])
+                    if event.key == pg.K_m or event.key == pg.K_q or event.key == pg.K_i:
                         self.selection = False
                         self.selectionCount = 0
                         self.menu.close_menu()
@@ -326,9 +315,9 @@ class InventoryState():
                 if event.type == pg.KEYUP:
                     if event.key == pg.K_SPACE:
                         #select action here
-                        #self.selected_item.action_dict[self.selected_action]
                         self.game.ItemHandler.do_action(self.selected_item, self.selected_action)
-                    if event.key == pg.K_RIGHT or event.key == pg.K_d:
+                    #Close Action Box
+                    if event.key == pg.K_RIGHT or event.key == pg.K_d or event.key == pg.K_q:
                         self.action_box = pg.Surface((0,0))
                         self.act_box_sel_count = 0
                         self.act_box_font_locs = []
@@ -343,8 +332,6 @@ class InventoryState():
                         self.act_box_sel_count -= 1
                         if self.act_box_sel_count < 0:
                             self.act_box_sel_count = len(self.selected_item.actions)-1
-
-
 
     def wait_for_key_up(self):
         state = self.inv_state
@@ -443,7 +430,7 @@ class SpellsState():
                     self.selection = False
                     self.selectionCount = 0
                     self.menu.menu_state = 'main'
-                if event.key == pg.K_m or event.key == pg.K_c:
+                if event.key == pg.K_m or event.key == pg.K_q:
                     self.selection = False
                     self.selectionCount = 0
                     self.menu.close_menu()
@@ -560,7 +547,7 @@ class QuestGuideState():
                     self.selection = False
                     self.selectionCount = 0
                     self.menu.menu_state = 'main'
-                if event.key == pg.K_m or event.key == pg.K_c:
+                if event.key == pg.K_m or event.key == pg.K_q:
                     self.selection = False
                     self.selectionCount = 0
                     self.menu.close_menu()
@@ -619,7 +606,7 @@ class SaveState():
                     self.selection = False
                     self.selectionCount = 0
                     self.menu.menu_state = 'main'
-                if event.key == pg.K_m or event.key == pg.K_c:
+                if event.key == pg.K_m or event.key == pg.K_q:
                     self.selection = False
                     self.selectionCount = 0
                     self.menu.close_menu()

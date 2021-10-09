@@ -67,6 +67,10 @@ class Interactable(Item):
     def __init__(self):
         super().__init__()
 
+class LockedItem(Interactable):
+    def __init__(self):
+        super().__init__()
+
 class Wand(Wearable):
     def __init__(self, wood, core, length, flex, maker=None):
         super().__init__()
@@ -226,13 +230,10 @@ class Alohamora(Spell):
         self.level = 1
 
     def cast(self, item):
-        try:
+        if isinstance(item, LockedItem):
             if item.locked:
                 item.locked = False
                 item.update()
-        except:
-            pass
-
 
 wand = Wand('Larch', 'Dragon Heartstring', '11 inches', 'Swishy')
 cauldron = Cauldron('Black Cauldron')

@@ -3,8 +3,10 @@ from settings import *
 from items import *
 import random
 
-class Shop():
+class Shop(pg.sprite.Sprite):
     def __init__(self, game, x, y, h, w, shop_id):
+        self.groups = game.shops, game.interactables
+        pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         self.shop_id = shop_id
         self.shop_dict = {'wandshop1' : WandShop(),
@@ -30,8 +32,9 @@ class Shop():
         #self.gui.update()
         pass
 
-class WandShop():
+class WandShop(Shop):
     def __init__(self):
+        pg.sprite.Sprite.__init__(self)
         self.tiled_id = 'wandshop1'
         self.name = "Wanda's Wand Shop"
         self.clerk = 'Wanda'
@@ -117,6 +120,7 @@ class WandShop():
 
 class BookShop(Shop):
     def __init__(self):
+        pg.sprite.Sprite.__init__(self)
         self.tiled_id = 'bookshop1'
         self.name = "Spellbook Shop"
         self.clerk = 'Dr. Booksy'

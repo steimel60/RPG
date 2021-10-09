@@ -64,7 +64,7 @@ class TestQuest():
         dialog = f"Thanks! Take this chocolate frog card."
         self.game.textbox.draw_box()
         self.game.textbox.draw_dialogue('Logan', dialog)
-        self.game.player.inventory.append(ChocolateFrogCard('Neville Longbottom'))
+        self.game.ItemHandler.add_item_to_inventory(ChocolateFrogCard('Neville Longbottom'))
         self.complete = True
 
 class TradeWithLoren():
@@ -88,7 +88,7 @@ class TradeWithLoren():
             self.activeSpeakers = ['Loren']
 
     def check_prereqs(self):
-        prereqs_met = any(isinstance(x, ChocolateFrogCard) for x in self.game.player.inventory)
+        prereqs_met = any(isinstance(x, ChocolateFrogCard) for x in self.game.ItemHandler.inventory)
         return prereqs_met
 
     def get_quest_dialog(self, name):

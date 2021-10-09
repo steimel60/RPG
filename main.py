@@ -61,7 +61,8 @@ class Game:
         self.npcs = pg.sprite.Group()
         self.walk_paths = pg.sprite.Group()
         self.gates = pg.sprite.Group()
-        self.shops = []
+        self.shops = pg.sprite.Group()
+        self.interactables = pg.sprite.Group()
         #Load Data from Tiled Map
         for tile_object in self.map.tmxdata.objects:
             if not from_door[0]:
@@ -76,8 +77,7 @@ class Game:
             if tile_object.name == "walk_path":
                 self.walk_path = Walk_Path(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.path_id)
             if tile_object.name == "shop":
-                self.loaded_shop = Shop(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.shop_id)
-                self.shops.append(self.loaded_shop)
+                self.shop = Shop(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.shop_id)
             if tile_object.name == "gate":
                 self.loaded_shop = Gate(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.level, tile_object.locked)
         #Load Level by Door Data
@@ -87,19 +87,19 @@ class Game:
                 if door.door_id == from_door[1]:
                     #Place player by door they came out of
                     if from_door[2] == 'up':
-                        self.player = Player(self, door.x, door.y-TILESIZE, inventory=self.player.inventory, money=(self.player.galleons,self.player.sickles,self.player.knuts))
+                        self.player = Player(self, door.x, door.y-TILESIZE)
                         self.player.dir = 1
                         self.player.equipped_effects()
                     elif from_door[2] == 'down':
-                        self.player = Player(self, door.x, door.y+TILESIZE, inventory=self.player.inventory, money=(self.player.galleons,self.player.sickles,self.player.knuts))
+                        self.player = Player(self, door.x, door.y+TILESIZE)
                         self.player.dir = 0
                         self.player.equipped_effects()
                     elif from_door[2] == 'left':
-                        self.player = Player(self, door.x-TILESIZE, door.y, inventory=self.player.inventory, money=(self.player.galleons,self.player.sickles,self.player.knuts))
+                        self.player = Player(self, door.x-TILESIZE, door.y)
                         self.player.dir = 2
                         self.player.equipped_effects()
                     elif from_door[2] == 'right':
-                        self.player = Player(self, door.x+TILESIZE, door.y, inventory=self.player.inventory, money=(self.player.galleons,self.player.sickles,self.player.knuts))
+                        self.player = Player(self, door.x+TILESIZE, door.y)
                         self.player.dir = 3
                         self.player.equipped_effects()
         #Set Others

@@ -21,7 +21,7 @@ class Obstacle(pg.sprite.Sprite):
         self.rect.y = y
 
 class Player(pg.sprite.Sprite):
-    def __init__(self, game, x, y, inventory=test_inventory, equipped=[],money=(0,1,23)):
+    def __init__(self, game, x, y):
         self.groups = game.all_sprites, game.user_group
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
@@ -57,12 +57,6 @@ class Player(pg.sprite.Sprite):
         self.walk_count = 0
         self.initial_collide = False
         self.dir = 0
-        #Inventory
-        self.inventory = inventory
-        self.equipped = equipped
-        self.galleons = money[0]
-        self.sickles = money[1]
-        self.knuts = money[2]
 
     def move(self):
         if self.walk_count + 1 > 23:
@@ -147,47 +141,29 @@ class Player(pg.sprite.Sprite):
                 game.screen.blit(item.images[self.dir][self.walk_count // 6], self.game.camera.apply(self))
 
     def check_for_interactions(self):
-        #Check NPCS
         if self.dir == 0: #down
-            for npc in self.game.npcs:
-                if npc.x == self.x and npc.y == self.y + TILESIZE:
-                    npc.dir=1
-                    npc.check_interactions()
+            for interactable in self.game.interactables:
+                if interactable.x == self.x and interactable.y == self.y + TILESIZE:
+                    interactable.dir=1
+                    interactable.check_interactions()
         if self.dir == 1: #up
-            for npc in self.game.npcs:
-                if npc.x == self.x and npc.y == self.y - TILESIZE:
-                    npc.dir=0
-                    npc.check_interactions()
+            for interactable in self.game.interactables:
+                if interactable.x == self.x and interactable.y == self.y - TILESIZE:
+                    interactable.dir=0
+                    interactable.check_interactions()
         if self.dir == 2: #left
-            for npc in self.game.npcs:
-                if npc.x == self.x - TILESIZE and npc.y == self.y:
-                    npc.dir=3
-                    npc.check_interactions()
+            for interactable in self.game.interactables:
+                if interactable.x == self.x - TILESIZE and interactable.y == self.y:
+                    interactable.dir=3
+                    interactable.check_interactions()
         if self.dir == 3: #right
-            for npc in self.game.npcs:
-                if npc.x == self.x + TILESIZE and npc.y == self.y:
-                    npc.dir=2
-                    npc.check_interactions()
-        #Check Shops
-        if self.dir == 0: #down
-            for shop in self.game.shops:
-                if shop.x == self.x and shop.y == self.y + TILESIZE:
-                    shop.check_interactions()
-        if self.dir == 1: #up
-            for shop in self.game.shops:
-                if shop.x == self.x and shop.y == self.y - TILESIZE:
-                    shop.check_interactions()
-        if self.dir == 2: #left
-            for shop in self.game.shops:
-                if shop.x == self.x - TILESIZE and shop.y == self.y:
-                    shop.check_interactions()
-        if self.dir == 3: #right
-            for shop in self.game.shops:
-                if shop.x == self.x + TILESIZE and shop.y == self.y:
-                    shop.check_interactions()
+            for interactable in self.game.interactables:
+                if interactable.x == self.x + TILESIZE and interactable.y == self.y:
+                    interactable.dir=2
+                    interactable.check_interactions()
 
     def equipped_effects(self):
-        for item in self.equipped:
+        for item in self.game.ItemHandler.equipped:
             item.equip_effect(self.game)
 
     def update(self):
@@ -211,7 +187,7 @@ class NPC(pg.sprite.Sprite):
         self.hair = [pg.image.load(hair_list[hair_id][0]), pg.image.load(hair_list[hair_id][1]), pg.image.load(hair_list[hair_id][2]), pg.image.load(hair_list[hair_id][3])]
         change_color(self.hair, WHITE, hairColors[hair_color])
         ### Add to game groups ###
-        self.groups = game.all_sprites, game.npcs
+        self.groups = game.all_sprites, game.npcs, game.interactables
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         ### Surface and Collision Rect ###
@@ -411,7 +387,6 @@ class NPC(pg.sprite.Sprite):
         self.get_image()
         self.rect.x = self.x
         self.rect.y = self.y
-        #self.textbox_check()
 
 class Walk_Path(pg.sprite.Sprite):
     def __init__(self, game, x, y, w, h, path_id):
@@ -505,11 +480,12 @@ class SideMenu():
     def clear(self):
         self.image.fill(WHITE)
 
-class Gate(pg.sprite.Sprite, Interactable):
+class Gate(pg.sprite.Sprite, LockedItem):
     def __init__(self, game, x, y, w, h, level, locked):
         super().__init__()
-        self.groups = game.gates, game.all_sprites
+        self.groups = game.gates, game.interactables, game.all_sprites
         pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
         ### Surface and Collision Rect ###
         self.image = pg.Surface((TILESIZE, TILESIZE))
         self.x = x
@@ -530,6 +506,16 @@ class Gate(pg.sprite.Sprite, Interactable):
             self.image = self.closed_image
         elif not self.locked:
             self.image = self.open_image
+
+    def check_interactions(self):
+        if self.locked:
+            text = 'The gate is locked.'
+            self.game.textbox.draw_box()
+            self.game.textbox.draw_text(text)
+        elif not self.locked:
+            text = 'The gate is open.'
+            self.game.textbox.draw_box()
+            self.game.textbox.draw_text(text)
 
     def draw(self, game):
         game.screen.blit(self.image, game.camera.apply(self))
