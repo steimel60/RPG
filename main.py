@@ -26,7 +26,8 @@ class Game:
         self.STATE_DICT = {
             'gameplay': states.GameplayState(self),
             'shop' : states.ShopState(self),
-            'menu' : states.MenuState(self)
+            'menu' : states.MenuState(self),
+            'text' : states.TextState(self)
         }
         self.current_state = 'gameplay'
         #Handlers
@@ -87,11 +88,11 @@ class Game:
                 if door.door_id == from_door[1]:
                     #Place player by door they came out of
                     if from_door[2] == 'up':
-                        self.player = Player(self, door.x, door.y-TILESIZE)
+                        self.player = Player(self, door.x, door.y-TILESIZE*2)
                         self.player.dir = 1
                         self.player.equipped_effects()
                     elif from_door[2] == 'down':
-                        self.player = Player(self, door.x, door.y+TILESIZE)
+                        self.player = Player(self, door.x, door.y)
                         self.player.dir = 0
                         self.player.equipped_effects()
                     elif from_door[2] == 'left':
@@ -111,7 +112,7 @@ class Game:
     def check_level(self):
         for door in self.doors:
             for player in self.user_group:
-                if (player.x >= door.x and player.x<door.x+door.w) and (player.y == door.y):
+                if (player.x >= door.x and player.x<door.x+door.w) and (player.y + TILESIZE == door.y):
                     self.level = door.to_level
                     door_id = door.door_id
                     exit_dir = door.exit_dir

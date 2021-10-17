@@ -45,7 +45,7 @@ class SideMenuMainState():
         self.draw_text()
         self.draw_selection_box()
         self.game.screen.blit(self.game.textbox.image, (20,500))
-        self.game.screen.blit(self.game.side_menu.image, (800,30))
+        self.game.screen.blit(self.game.side_menu.image, (SIDE_MENU_X,SIDE_MENU_Y))
         pg.display.flip()
     #Create dict of menus (inventory, spells, etc.)
     def draw_text(self):
@@ -77,7 +77,7 @@ class SideMenuMainState():
             text = font.render(menu, True, WHITE, BLACK)
             textRect = text.get_rect()
             height = font.size(menu)[1]
-            selectionBox = pg.Surface((300,height))
+            selectionBox = pg.Surface((SIDE_MENU_W,height))
             #Draw Selection Box then text
             self.game.side_menu.image.blit(selectionBox, (0,self.fontLocs[self.selectionCount][1]))
             self.game.side_menu.image.blit(text, (10,self.fontLocs[self.selectionCount][1]))
@@ -100,6 +100,7 @@ class InventoryState():
         #Action Box
         self.selected_item = None
         self.action_box = pg.Surface((0,0))
+        self.action_box_w = 4*TILESIZE
         self.act_box_sel_count = 0
         self.act_box_font_locs = []
 
@@ -112,9 +113,9 @@ class InventoryState():
         self.draw_text()
         self.draw_selection_box()
         self.game.screen.blit(self.game.textbox.image, (20,500))
-        self.game.screen.blit(self.game.side_menu.image, (800,30))
+        self.game.screen.blit(self.game.side_menu.image, (SIDE_MENU_X,SIDE_MENU_Y))
         if self.inv_state == 'action_box':
-            self.game.screen.blit(self.action_box, (650,self.fontLocs[self.selectionCount][1]+30))
+            self.game.screen.blit(self.action_box, (screenWidth-SIDE_MENU_W-self.action_box_w,self.fontLocs[self.selectionCount][1]+SIDE_MENU_Y))
             self.draw_act_box_text()
             self.draw_act_box_sel_box()
         pg.display.flip()
@@ -192,14 +193,14 @@ class InventoryState():
             text = font.render(item, True, WHITE, BLACK)
             textRect = text.get_rect()
             height = font.size(item)[1]
-            selectionBox = pg.Surface((300,height))
+            selectionBox = pg.Surface((SIDE_MENU_W,height))
             #Draw Selection Box then text
             self.game.side_menu.image.blit(selectionBox, (0,self.fontLocs[self.selectionCount][1]))
             self.game.side_menu.image.blit(text, (10,self.fontLocs[self.selectionCount][1]))
 
     def open_actions_box(self, item):
         self.act_box_font_locs = []
-        self.action_box = pg.Surface((150,300))
+        self.action_box = pg.Surface((self.action_box_w,300))
         self.action_box.fill(WHITE)
         font = pg.font.Font('freesansbold.ttf', 12)
         blitLoc = [0,0]
@@ -231,7 +232,7 @@ class InventoryState():
             text = font.render(action, True, WHITE, BLACK)
             textRect = text.get_rect()
             height = font.size(action)[1]
-            selectionBox = pg.Surface((300,height))
+            selectionBox = pg.Surface((self.action_box_w,height))
             #Draw Selection Box then text
         self.action_box.blit(selectionBox, (self.act_box_font_locs[self.act_box_sel_count]))
         self.action_box.blit(text, (self.act_box_font_locs[self.act_box_sel_count]))
@@ -362,7 +363,7 @@ class SpellsState():
         self.draw_text()
         self.draw_selection_box()
         self.game.screen.blit(self.game.textbox.image, (20,500))
-        self.game.screen.blit(self.game.side_menu.image, (800,30))
+        self.game.screen.blit(self.game.side_menu.image, (SIDE_MENU_X,SIDE_MENU_Y))
         pg.display.flip()
 
     def draw_text(self):
@@ -448,7 +449,7 @@ class QuestGuideState():
         self.draw_text()
         self.draw_selection_box()
         self.game.screen.blit(self.game.textbox.image, (20,500))
-        self.game.screen.blit(self.game.side_menu.image, (800,30))
+        self.game.screen.blit(self.game.side_menu.image, (SIDE_MENU_X,SIDE_MENU_Y))
         pg.display.flip()
 
     def draw_text(self):
@@ -565,7 +566,7 @@ class SaveState():
         self.draw_text()
         #self.draw_selection_box()
         self.game.screen.blit(self.game.textbox.image, (20,500))
-        self.game.screen.blit(self.game.side_menu.image, (800,30))
+        self.game.screen.blit(self.game.side_menu.image, (SIDE_MENU_X,SIDE_MENU_Y))
         pg.display.flip()
 
     def draw_text(self):
@@ -602,6 +603,102 @@ class SaveState():
                     self.selectionCount -= 1
                     if self.selectionCount < 0:
                         self.selectionCount = len(self.menu.menu_dict.keys())-2
+                if event.key == pg.K_LEFT or event.key == pg.K_a:
+                    self.selection = False
+                    self.selectionCount = 0
+                    self.menu.menu_state = 'main'
+                if event.key == pg.K_m or event.key == pg.K_q:
+                    self.selection = False
+                    self.selectionCount = 0
+                    self.menu.close_menu()
+
+class QuickCastState():
+    def __init__(self, menu, game):
+        self.game = game
+        self.menu = menu
+        self.selection = False
+        self.selectionCount = 0
+        self.fontLocs = []
+
+    def draw(self):
+        self.game.screen.blit(self.game.map_img, self.game.camera.apply_rect(self.game.map_rect))
+        self.game.draw_grid()
+        for sprite in self.game.all_sprites:
+            sprite.draw(self.game)
+        self.game.side_menu.clear()
+        self.draw_text()
+        self.draw_selection_box()
+        self.game.screen.blit(self.game.textbox.image, (20,500))
+        self.game.screen.blit(self.game.side_menu.image, (SIDE_MENU_X,SIDE_MENU_Y))
+        pg.display.flip()
+
+    def draw_text(self):
+        locs = []
+        blitLoc = [0,0]
+        font = pg.font.Font(f'{font_folder}/MagicFont.ttf', 36)
+        label = self.menu.menu_state
+        text = font.render(label, True, BLACK, WHITE)
+        height = font.size(label)[1]
+        self.game.side_menu.image.blit(text, (blitLoc[0]+25,blitLoc[1]))
+        blitLoc[1] += height
+        font = pg.font.Font('freesansbold.ttf', 12)
+        for spell in self.game.SpellHandler.known_spells:
+            text = font.render(spell.name, True, BLACK, WHITE)
+            height = font.size(spell.name)[1]
+            self.game.side_menu.image.blit(text, (blitLoc[0]+10,blitLoc[1]))
+            locs.append((blitLoc[0]+10,blitLoc[1]))
+            blitLoc[1] += height
+        self.fontLocs = locs
+
+    def draw_selection_box(self):
+        if self.selection == True:
+            spells = [spell for spell in self.game.SpellHandler.known_spells]
+            spell_names = [spell.name for spell in spells]
+            spell = spell_names[self.selectionCount]
+            #Get font and font data
+            font = pg.font.Font('freesansbold.ttf', 12)
+            text = font.render(spell, True, WHITE, BLACK)
+            textRect = text.get_rect()
+            height = font.size(spell)[1]
+            selectionBox = pg.Surface((self.game.textbox.width,height))
+            #Draw Selection Box then text
+            self.game.side_menu.image.blit(selectionBox, (0,self.fontLocs[self.selectionCount][1]))
+            self.game.side_menu.image.blit(text, (10,self.fontLocs[self.selectionCount][1]))
+            self.selected_spell = spells[self.selectionCount]
+
+    def events(self):
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                self.game.quit()
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_ESCAPE:
+                    self.game.quit()
+            if event.type == pg.KEYUP:
+                if event.key == pg.K_DOWN or event.key == pg.K_s:
+                    if not self.selection and len(self.game.SpellHandler.known_spells) > 0:
+                        self.selection = True
+                        self.selectionCount -= 1
+                    self.selectionCount += 1
+                    if self.selectionCount > len(self.game.SpellHandler.known_spells)-1:
+                        self.selectionCount=0
+                #scroll up
+                if event.key == pg.K_UP or event.key == pg.K_w:
+                    if not self.selection and len(self.game.SpellHandler.known_spells) > 0:
+                        self.selection = True
+                        self.selectionCount += 1
+                    self.selectionCount -= 1
+                    if self.selectionCount < 0:
+                        self.selectionCount = len(self.game.SpellHandler.known_spells)-1
+
+                if event.key == pg.K_SPACE:
+                    if self.selection:
+                        self.game.SpellHandler.cast(self.selected_spell)
+                        self.selection = False
+                        self.selectionCount = 0
+                        self.menu.close_menu()
+                    else:
+                        self.selection = True
+
                 if event.key == pg.K_LEFT or event.key == pg.K_a:
                     self.selection = False
                     self.selectionCount = 0

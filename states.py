@@ -19,6 +19,9 @@ class GameplayState():
                 if event.key == pg.K_i:
                     self.game.current_state = 'menu'
                     self.game.STATE_DICT['menu'].open_inventory()
+                if event.key == pg.K_c:
+                    self.game.current_state = 'menu'
+                    self.game.STATE_DICT['menu'].menu_state = 'Quick Cast'
                 if event.key == pg.K_m:
                     self.game.current_state = 'menu'
                 if event.key == pg.K_g:
@@ -38,7 +41,7 @@ class GameplayState():
 
     def update(self):
         self.game.all_sprites.update()
-        self.game.textbox.update()
+        #self.game.textbox.update()
         self.game.camera.update(self.game.player)
         self.game.check_level()
 
@@ -120,12 +123,12 @@ class ShopState():
         self.draw_shop_menu()
         self.draw_text()
         self.draw_selection_box()
-        self.game.textbox.draw_box()
+        #self.game.textbox.draw_box()
         text = self.text
         if self.dialog_state == 'dialog':
-            self.game.textbox.draw_dialogue(self.shop.shop.clerk, text)
+            self.game.STATE_DICT['text'].draw_placeholder_dialog(self.shop.shop.clerk, text)
         elif self.dialog_state == 'question':
-            self.game.textbox.yes_no_question(self.shop.shop.clerk, text, self.ans)
+            self.game.STATE_DICT['text'].yes_no_question(self.shop.shop.clerk, text, self.ans)
         self.game.screen.blit(self.game.textbox.image, (20,500))
         self.game.screen.blit(self.menu_image, (800,30))
         pg.display.flip()
@@ -249,8 +252,20 @@ class ShopState():
             self.continue_shopping()
 
     def continue_shopping(self):
-        self.text = 'Would you like to continue shopping?'
-        self.dialog_state = 'question'
+        #self.text = 'Would you like to continue shopping?'
+        self.dialog_state = 'temp'
+        text = 'Would you like to continue shopping?'
+        answers = ['Yes', 'No']
+        ans = self.game.STATE_DICT['text'].ask_question(self.shop.shop.clerk, text, answers)
+        if ans == 'Yes':
+            self.text = f'Welcome to {self.shop.shop.name}!'
+            self.dialog_state = 'dialog'
+        if ans == 'No':
+            self.dialog_state = 'dialog'
+            self.text = f'Enjoy your {self.purchased_item.name}!'
+            self.draw()
+            self.wait_for_key_up()
+            self.close_shop()
 
     def answer(self):
         if self.text == 'Would you like to continue shopping?' and self.ans == 'yes':
@@ -290,6 +305,7 @@ class MenuState():
                 'main' : SideMenuMainState(self, self.game),
                 'Inventory' : InventoryState(self, self.game),
                 'Spells' : SpellsState(self, self.game),
+                'Quick Cast' : QuickCastState(self, self.game),
                 'Quest Guide' : QuestGuideState(self, self.game),
                 'Save' : SaveState(self, self.game)
         }
@@ -308,5 +324,198 @@ class MenuState():
     #Get Events
     def events(self):
         self.menu_dict[self.menu_state].events()
+    def update(self):
+        pass
+
+class TextState():
+    def __init__(self, game):
+        self.game = game
+        self.last_state = None
+        self.answer_index = 0
+        self.result_given = False
+
+    def events(self):
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                self.game.quit()
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_ESCAPE:
+                    self.game.quit()
+
+    def draw(self):
+        self.game.STATE_DICT[self.last_state].draw()
+        pg.display.flip()
+
+    def enter_text_state(self):
+        self.last_state = self.game.current_state
+        self.game.current_state = 'text'
+
+    def exit_text_state(self):
+        self.game.current_state = self.last_state
+        self.game.textbox.close_box()
+        self.last_state = None
+        self.answer_index = 0
+        self.result_given = False
+
+    def draw_box(self):
+        self.game.textbox.image = pg.Surface((self.game.textbox.width,self.game.textbox.height))
+        self.game.textbox.image.fill(WHITE)
+
+    def draw_text(self, dialog):
+        self.enter_text_state()
+        font = pg.font.Font('freesansbold.ttf', 16)
+
+        word_list = dialog.split(' ')
+        current_line = 0
+        current_x = 0
+        line_size = font.size("Tg")[1]
+        done_rendering = False
+
+        while not done_rendering:
+            word_counter = 0
+            self.draw_box()
+            #Blit a page of text
+            for word in word_list:
+                word_counter += 1
+                text = font.render(f'{word} ', True, BLACK, WHITE)
+                word_size = font.size(f'{word} ')
+                if word_size[0] + current_x > self.game.textbox.width:
+                    current_x = 0
+                    current_line += 1
+                if current_line*line_size + word_size[1] > self.game.textbox.height:
+                    current_x = 0
+                    current_line = 0
+                    break
+                self.game.textbox.image.blit(text, (current_x,current_line*line_size))
+                current_x += word_size[0]
+            if word_counter == len(word_list):
+                done_rendering = True
+            else:
+                word_list = word_list[word_counter:]
+                print(f'Word counter: {word_counter}')
+                print(f'Word List: {word_list}')
+            self.draw()
+            self.wait_for_key_up()
+        self.exit_text_state()
+
+    def draw_dialog(self, name, dialog):
+        self.enter_text_state()
+        font = pg.font.Font('freesansbold.ttf', 16)
+
+        word_list = dialog.split(' ')
+        current_line = 0
+        current_x = 0
+        line_size = font.size("Tg")[1]
+        done_rendering = False
+
+        while not done_rendering:
+            self.draw_box()
+            text = font.render(f'{name}: ', True, BLACK, WHITE)
+            nameSize = font.size(f'{name}: ')
+            self.game.textbox.image.blit(text, (current_x,current_line*line_size))
+            current_x += nameSize[0]
+            word_counter = 0
+
+            #Blit a page of text
+            for word in word_list:
+                word_counter += 1
+                text = font.render(f'{word} ', True, BLACK, WHITE)
+                word_size = font.size(f'{word} ')
+                if word_size[0] + current_x > self.game.textbox.width:
+                    current_x = 0
+                    current_line += 1
+                if current_line*line_size + word_size[1] > self.game.textbox.height:
+                    current_x = 0
+                    current_line = 0
+                    break
+                self.game.textbox.image.blit(text, (current_x,current_line*line_size))
+                current_x += word_size[0]
+            if word_counter == len(word_list):
+                done_rendering = True
+            else:
+                word_list = word_list[word_counter-1:]
+            self.draw()
+            self.wait_for_key_up()
+        self.exit_text_state()
+
+    def draw_placeholder_dialog(self, name, dialog):
+        self.draw_box()
+        font = pg.font.Font('freesansbold.ttf', 16)
+        text = font.render(f'{name}: {dialog}', True, BLACK, WHITE)
+        textRect = text.get_rect()
+        self.game.textbox.image.blit(text, textRect)
+
+    def draw_placeholder_text(self, dialog):
+        self.draw_box()
+        font = pg.font.Font('freesansbold.ttf', 16)
+        text = font.render(dialog, True, BLACK, WHITE)
+        textRect = text.get_rect()
+        self.game.textbox.image.blit(text, textRect)
+
+    def ask_question(self, name, question, answers):
+        self.enter_text_state()
+        font = pg.font.Font('freesansbold.ttf', 16)
+        self.result_given = False
+        while not self.result_given:
+            #question draw and get size
+            self.draw_box()
+            self.draw_placeholder_dialog(name, question)
+            q_size = font.size(f'{name}: {question}')
+            #arrow info
+            arrow_font = font.render(f' <-', True, BLACK, WHITE)
+            arrow_size = font.size(' <-')
+            #Get fonts and sizes of answers
+            fonts = []
+            sizes = []
+            locs = []
+            max_ans_width = 0
+            current_x, current_y = 0, q_size[1]
+            for i in range(0,len(answers)):
+                ans_font = font.render(answers[i], True, BLACK, WHITE)
+                ans_size = font.size(answers[i])
+                ans_loc = (current_x, current_y)
+                current_y += ans_size[1]
+                max_ans_width = max(max_ans_width, ans_size[0])
+                self.game.textbox.image.blit(ans_font, ans_loc)
+                locs.append(ans_loc)
+            #Blit arrow
+            arrow_loc = (max_ans_width, locs[self.answer_index][1])
+            self.game.textbox.image.blit(arrow_font, arrow_loc)
+            self.draw()
+            self.question_events(answers)
+        result = answers[self.answer_index]
+        self.exit_text_state()
+        return result
+
+    def question_events(self, answers):
+        for event in pg.event.get():
+            if event.type == pg.KEYUP:
+                if event.key == pg.K_DOWN or event.key == pg.K_s:
+                    self.answer_index += 1
+                    if self.answer_index > len(answers)-1:
+                        self.answer_index = 0
+                if event.key == pg.K_UP or event.key == pg.K_w:
+                    self.answer_index -= 1
+                    if self.answer_index < 0:
+                        self.answer_index = len(answers)-1
+                    #select
+                if event.key == pg.K_SPACE:
+                    self.result_given = True
+
+    def wait_for_key_up(self):
+        state = self.game.current_state
+        self.game.state = 'waiting'
+        hit_space = False
+        while not hit_space:
+            for event in pg.event.get():
+                if event.type == pg.KEYUP:
+                    #next
+                    if event.key == pg.K_SPACE:
+                        hit_space = True
+        self.game.current_state = state
+
+    def close_box(self):
+        self.image = pg.Surface((0,0))
+
     def update(self):
         pass

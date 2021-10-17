@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.5" tiledversion="1.7.2" orientation="orthogonal" renderorder="right-down" width="50" height="30" tilewidth="32" tileheight="32" infinite="0" nextlayerid="5" nextobjectid="29">
+<map version="1.5" tiledversion="1.7.2" orientation="orthogonal" renderorder="right-down" width="50" height="30" tilewidth="32" tileheight="32" infinite="0" nextlayerid="5" nextobjectid="30">
  <tileset firstgid="1" source="town.tsx"/>
  <tileset firstgid="1025" source="buildings.tsx"/>
  <layer id="1" name="Tile Layer 1" width="50" height="30">
@@ -135,6 +135,16 @@
     <property name="door_id" type="int" value="1"/>
     <property name="exit_dir" value="up"/>
     <property name="to_level" value="BookShop"/>
+   </properties>
+  </object>
+  <object id="29" name="NPC" x="64" y="96" width="32" height="32">
+   <properties>
+    <property name="dir" type="int" value="0"/>
+    <property name="hair_color" type="int" value="3"/>
+    <property name="hair_id" type="int" value="1"/>
+    <property name="name_id" value="Ted"/>
+    <property name="path_id" type="int" value="-1"/>
+    <property name="skin_id" type="int" value="1"/>
    </properties>
   </object>
  </objectgroup>

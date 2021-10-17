@@ -4,8 +4,8 @@ import random
 
 class Item():
     def __init__(self):
-        self.type = '' #Ex) Wand, Card, Cloak
-        self.name = '' #Specific Item name Ex) Larch Wand
+        #self.type = '' #Ex) Wand, Card, Cloak
+        #self.name = '' #Specific Item name Ex) Larch Wand
         self.details = {} #Dict of Item details
         self.icon = None #Inventory icon
         self.actions = ['Details','Destroy']
@@ -137,21 +137,49 @@ class Broom(Equippable):
         game.player.speed = WALK_SPEED
 
 class Cloak(Armor):
-    def __init__(self, name):
+    def __init__(self):
         super().__init__()
-        self.name = name
-        self.image = self.get_image()
+        self.image_folder = path.join(cloaks_folder, self.name)
+        self.main_image_folder = path.join(self.image_folder, 'Main')
+        self.accent_image_folder = path.join(self.image_folder, 'Accent')
+        #self.accent2_image_folder = path.join(self.image_folder, 'Accent2')
+        self.wrinkles_image_folder = path.join(self.image_folder, 'Wrinkles')
+        #Cloak Images
+        self.image = pg.Surface((TILESIZE,TILESIZE))
+        cloak_down_img = [path.join(img_folder, 'f1.png'), path.join(img_folder, 'f2.png'), path.join(img_folder, 'f3.png'), path.join(img_folder, 'f4.png')]
+        cloak_up_img = [path.join(img_folder, 'b1.png'), path.join(img_folder, 'b2.png'), path.join(img_folder, 'b3.png'), path.join(img_folder, 'b4.png')]
+        cloak_left_img = [path.join(img_folder, 'l1.png'), path.join(img_folder, 'l2.png'), path.join(img_folder, 'l3.png'), path.join(img_folder, 'l4.png')]
+        cloak_right_img = [path.join(img_folder, 'r1.png'), path.join(img_folder, 'r2.png'), path.join(img_folder, 'r3.png'), path.join(img_folder, 'r4.png')]
+        cloak_down = [pg.image.load(cloak_down_img[0]), pg.image.load(cloak_down_img[1]), pg.image.load(cloak_down_img[2]), pg.image.load(cloak_down_img[3])]
+        cloak_up = [pg.image.load(cloak_up_img[0]), pg.image.load(cloak_up_img[1]), pg.image.load(cloak_up_img[2]), pg.image.load(cloak_up_img[3])]
+        cloak_left = [pg.image.load(cloak_left_img[0]), pg.image.load(cloak_left_img[1]), pg.image.load(cloak_left_img[2]), pg.image.load(cloak_left_img[3])]
+        cloak_right = [pg.image.load(cloak_right_img[0]), pg.image.load(cloak_right_img[1]), pg.image.load(cloak_right_img[2]), pg.image.load(cloak_right_img[3])]
+        self.images = [cloak_down, cloak_up, cloak_left, cloak_right]
+        self.change_color()
+
 
     def get_details(self):
         return {}
 
-    def get_image(self):
-        pass
+    def get_images(self):
+        for folder in [self.main_image_folder, self.accent_image_folder, self.wrinkles_image_folder]:
+            front_images = [path.join(folder, 'f1.png'), path.join(folder, 'f2.png'), path.join(folder, 'f3.png'), path.join(folder, 'f4.png')]
+            back_images = [path.join(folder, 'b1.png'), path.join(folder, 'b2.png'), path.join(folder, 'b3.png'), path.join(folder, 'b4.png')]
+            left_images = [path.join(folder, 'l1.png'), path.join(folder, 'l2.png'), path.join(folder, 'l3.png'), path.join(folder, 'l4.png')]
+            right_images = [path.join(folder, 'r1.png'), path.join(folder, 'r2.png'), path.join(folder, 'r3.png'), path.join(folder, 'r4.png')]
+            all_img_paths = [front_images, back_images, left_images, right_images]
+            
 
     def equip_effect(self, game):
         pass
 
     def unequip_effect(self, game):
+        pass
+
+    def draw(self):
+        pass
+
+    def update(self):
         pass
 
 class InvisibilityCloak(Equippable):
@@ -236,8 +264,10 @@ class Alohamora(Spell):
                 item.update()
 
 wand = Wand('Larch', 'Dragon Heartstring', '11 inches', 'Swishy')
+wand2 = Wand('Elder', 'Unicorn Hair', '10 inches', 'Springy')
 cauldron = Cauldron('Black Cauldron')
 cloak = InvisibilityCloak()
 broom = Broom('Nimbus 2000')
 juice = PumpkinJuice()
-test_inventory = [cauldron, cloak, broom, juice]
+test_inventory = [wand, wand2, cauldron, cloak, broom, juice]
+print(type(wand))

@@ -107,7 +107,7 @@ class Player(pg.sprite.Sprite):
 
     def collide_with_walls(self):
         for wall in self.game.walls:
-            if wall.x <= self.target_x <= (wall.x + wall.w-TILESIZE) and wall.y <= self.target_y <= (wall.y + wall.h-TILESIZE):
+            if wall.x <= self.target_x < (wall.x + wall.w) and wall.y <= self.target_y + TILESIZE < (wall.y + wall.h):
                 return True
         return False
 
@@ -121,7 +121,7 @@ class Player(pg.sprite.Sprite):
     def collide_with_gates(self):
         for gate in self.game.gates:
             if gate.locked:
-                if gate.x <= self.target_x <= (gate.x + gate.w-TILESIZE) and gate.y <= self.target_y <= (gate.y + gate.h-TILESIZE):
+                if gate.x <= self.target_x < (gate.x + gate.w) and gate.y <= self.target_y + TILESIZE < (gate.y + gate.h):
                     return True
         return False
 
@@ -148,7 +148,7 @@ class Player(pg.sprite.Sprite):
                     interactable.check_interactions()
         if self.dir == 1: #up
             for interactable in self.game.interactables:
-                if interactable.x == self.x and interactable.y == self.y - TILESIZE:
+                if interactable.x == self.x and interactable.y == self.y:
                     interactable.dir=0
                     interactable.check_interactions()
         if self.dir == 2: #left
@@ -329,33 +329,36 @@ class NPC(pg.sprite.Sprite):
 
     def check_interactions(self):
         #Check for Dialog/Shop/Quests etc.
-        #Check Quests
+        #Check Visibility
         player_visible = True
         if self.game.player.invisible:
             player_visible = False
-            text = random.choice(['What was that??', 'Uh, hello...?', 'AHHH- I mean, who goes there?!'])
-            self.game.textbox.draw_box()
-            self.game.textbox.draw_dialogue(self.name, text)
+            dialog = random.choice(['What was that??', 'Uh, hello...?', 'AHHH- I mean, who goes there?!'])
         #self.game.QuestHandler.check_quests()
+        #Check Quests
         has_quest_dialog = False
         if player_visible:
             for quest in self.game.quests:
                 if not quest.active and not quest.complete and quest.check_prereqs():
                     if quest.giver == self.name:
-                        quest.activate_quest()
+                        dialog = quest.activate_quest()
                         has_quest_dialog = True
                 elif quest.active and self.name in quest.activeSpeakers and not quest.complete:
-                    if quest.get_quest_dialog(self.name):
+                    if quest.has_dialog(self.name):
+                        dialog = quest.get_quest_dialog(self.name)
                         has_quest_dialog = True
         #Random Dialog
         if player_visible and not has_quest_dialog:
-            self.get_npc_dialog()
+            dialog = self.get_npc_dialog()
+
+        #Draw textbox
+        self.draw_dialog(dialog)
+        #self.game.textbox.close_box()
 
     def get_npc_dialog(self):
         if not self.introduced:
             dialog = f"Hi I'm {self.name}"
-            self.game.textbox.draw_box()
-            self.game.textbox.draw_text(dialog)
+            self.game.STATE_DICT['text'].draw_dialog(self.name, dialog)
             self.introduced = True
         elif self.name in Special_NPCs:
             topic = random.choice(list(Special_NPCs[self.name].keys()))
@@ -363,12 +366,9 @@ class NPC(pg.sprite.Sprite):
                 dialog = random.choice([f"I'm in {Special_NPCs[self.name][topic]}!", f"{Special_NPCs[self.name][topic]} is the best house at Hogwarts!"])
             elif topic == 'Pet':
                 dialog = random.choice([f"I just got a pet {Special_NPCs[self.name][topic]}!", f"My {Special_NPCs[self.name][topic]}'s name is {self.name} Jr."])
-            self.game.textbox.draw_box()
-            self.game.textbox.draw_text(dialog)
         else:
-            dialog = f"I'm not important"
-            self.game.textbox.draw_box()
-            self.game.textbox.draw_text(dialog)
+            dialog = f"I'm not important. This is a really long string that won't fit in the textbox unless we wrap it. So I made a text wrap func and going to try it out with this string. If a string is really really really long it might go on to the next page and my function should be able to hande that as well. The font is small so there has to be a lot of words in order to need mulitple pages, but if there is a monologue it may be useful. This last sentence should now be long enough that you will have to see a second page."
+        return dialog
 
     def get_image(self):
         self.images[self.dir][self.walk_count // 6].blit(self.hair[self.dir], (0,0))
@@ -379,6 +379,24 @@ class NPC(pg.sprite.Sprite):
         for item in [self.hat, self.shirt, self.cloak, self.wand]:
             if item != None:
                 game.screen.blit(item.images[self.dir][self.walk_count // 6], self.game.camera.apply(self))
+
+    def draw_dialog(self, dialog):
+        #Allow NPC to turn before textbox is open
+        self.game.all_sprites.update()
+        #Handle Text
+        self.game.STATE_DICT['text'].draw_dialog(self.name, dialog)
+
+    def wait_for_key_up(self):
+        state = self.game.current_state
+        self.game.state = 'waiting'
+        hit_space = False
+        while not hit_space:
+            for event in pg.event.get():
+                if event.type == pg.KEYUP:
+                    #next
+                    if event.key == pg.K_SPACE:
+                        hit_space = True
+        self.game.current_state = state
 
     def update(self):
         self.find_path()
@@ -409,71 +427,33 @@ class Textbox():
         self.game = game
         self.image = pg.Surface((0,0))
         self.image.fill(WHITE)
+        self.width = 600
+        self.height = 100
         self.x = x
         self.y = y
         self.rect = pg.Rect(x, y, 300, 100)
         self.rect.x = x
         self.rect.y = y
+        self.open = False
 
     def draw_box(self):
-        self.image = pg.Surface((600,100))
+        self.image = pg.Surface((self.width,self.height))
         self.image.fill(WHITE)
-
-    def draw_text(self, dialog):
-        font = pg.font.Font('freesansbold.ttf', 16)
-        text = font.render(dialog, True, BLACK, WHITE)
-        textRect = text.get_rect()
-        self.image.blit(text, textRect)
-
-    def check_game(self):
-        for user in self.game.user_group:
-            if user.moving:
-                self.close_box()
-
-    def draw_dialogue(self, name, dialog):
-        font = pg.font.Font('freesansbold.ttf', 16)
-        text = font.render(f'{name}: {dialog}', True, BLACK, WHITE)
-        textRect = text.get_rect()
-        self.image.blit(text, textRect)
-
-    def yes_no_question(self, name, question, answer):
-        font = pg.font.Font('freesansbold.ttf', 16)
-        self.draw_dialogue(name, question)
-        #Get fonts and sizes
-        yes_font = font.render(f'Yes', True, BLACK, WHITE)
-        no_font = font.render(f'No', True, BLACK, WHITE)
-        arrow_font = font.render(f' <-', True, BLACK, WHITE)
-        q_size = font.size(f'{name}: {question}')
-        y_size = font.size('Yes')
-        n_size = font.size('No')
-        arrow_size = font.size(' <-')
-        #Get Font Locations
-        y_loc = (0,q_size[1])
-        n_loc = (0,y_loc[1]+y_size[1])
-        if answer == 'yes':
-            arrow_loc = (y_size[0],y_loc[1])
-        else:
-            arrow_loc = (n_size[0],n_loc[1])
-        #blit to textbox
-        self.image.blit(yes_font, y_loc)
-        self.image.blit(no_font, n_loc)
-        self.image.blit(arrow_font, arrow_loc)
-    def get_text(self, text):
-        #Read in text to display as a list (pages)
-        pass
 
     def close_box(self):
         self.image = pg.Surface((0,0))
 
     def update(self):
-        self.check_game()
+        pass
 
 class SideMenu():
     def __init__(self, game):
         #self.groups = game.all_sprites, game.textbox
         #pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = pg.Surface((300,600))
+        self.width = SIDE_MENU_W
+        self.height = SIDE_MENU_H
+        self.image = pg.Surface((self.width,self.height))
         self.image.fill(WHITE)
         self.font = pg.font.Font('freesansbold.ttf', 12)
 
@@ -510,12 +490,11 @@ class Gate(pg.sprite.Sprite, LockedItem):
     def check_interactions(self):
         if self.locked:
             text = 'The gate is locked.'
-            self.game.textbox.draw_box()
-            self.game.textbox.draw_text(text)
+            #Handle Text
+            self.game.STATE_DICT['text'].draw_text(text)
         elif not self.locked:
             text = 'The gate is open.'
-            self.game.textbox.draw_box()
-            self.game.textbox.draw_text(text)
+            self.game.STATE_DICT['text'].draw_text(text)
 
     def draw(self, game):
         game.screen.blit(self.image, game.camera.apply(self))

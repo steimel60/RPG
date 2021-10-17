@@ -3,6 +3,8 @@ from os import path
 ##Load Folders
 game_folder = path.dirname(__file__)
 img_folder = path.join(game_folder, 'img')
+clothes_folder = path.join(img_folder, 'Clothing')
+cloaks_folder = path.join(clothes_folder, 'Cloaks')
 font_folder = path.join(game_folder, 'Fonts')
 
 # define some colors (R, G, B)
@@ -31,4 +33,8 @@ WALK_SPEED = 2
 BROOM_SPEED = 4
 skin_colors = [(245,185,158),(234,154,95),(127,67,41)]
 
-#
+#Menu Settings
+SIDE_MENU_W = 7*TILESIZE
+SIDE_MENU_H = 18*TILESIZE
+SIDE_MENU_X = screenWidth - SIDE_MENU_W
+SIDE_MENU_Y = ((screenHeight/TILESIZE - 18)/2)*TILESIZE

@@ -1,6 +1,8 @@
 from settings import *
 from items import *
 
+#Handlers are used to track and handle data that needs to remain consistent between level loads
+
 class ItemHandler():
     def __init__(self, game):
         self.game = game
@@ -16,9 +18,14 @@ class ItemHandler():
         self.inventory_length += 1
 
     def equip_item(self, item):
+        for equipped_item in self.equipped:
+            if type(equipped_item) == type(item):
+                self.unequip_item(equipped_item)
         self.equipped.append(item)
         self.inventory.remove(item)
+
         item.equip_effect(self.game)
+        #Change actions for inventory
         item.actions = list(map(lambda action: action.replace("Equip","Unequip"), item.actions))
         #Change alpha if invisible
         if isinstance(item, Wearable) and self.game.player.invisible:
@@ -64,7 +71,18 @@ class ItemHandler():
         self.inventory_length -= 1
 
 class QuestHandler():
-    pass
+    def __init__(self, game):
+        self.game = game
+        self.active_quests = []
+        self.completed_quests = []
+
+    def activate_quest(self, quest):
+        self.active_quests.append(quest)
+
+    def check_step_prereqs(self, quest):
+        if quest.step_tracker[quest.current_step]['Prereqs'] == None:
+            return True
+        return all(quest.step_tracker[quest.current_step])
 
 class SpellHandler():
     def __init__(self, game):
@@ -77,7 +95,14 @@ class SpellHandler():
     def cast(self, spell):
         item = self.get_item_to_cast_on()
         if item != None:
-            spell.cast(item)
+            #Check that a wand is equipped
+            if any(isinstance(item, Wand) for item in self.game.ItemHandler.equipped):
+                spell.cast(item)
+                text = f'{spell.name}!'
+                self.game.STATE_DICT['text'].draw_text(text)
+            else:
+                text = 'You must have a wand equipped to cast spells!'
+                self.game.STATE_DICT['text'].draw_text(text)
 
     def get_item_to_cast_on(self):
         player_x = self.game.player.x
