@@ -1,6 +1,7 @@
 from settings import *
 import pygame as pg
 import random
+from houses import GryffindorHouse, SlytherinHouse, HufflepuffHouse, RavenclawHouse
 
 class Item():
     def __init__(self):
@@ -36,6 +37,31 @@ class Wearable(Equippable):
     '''
     def __init__(self):
         super().__init__()
+        #Images
+        self.image = pg.Surface((TILESIZE,TILESIZE))
+        front_file_names = ['f1.png','f2.png','f3.png','f4.png']
+        back_file_names = ['b1.png','b2.png','b3.png','b4.png']
+        left_file_names = ['l1.png','l2.png','l3.png','l4.png']
+        right_file_names = ['r1.png','r2.png','r3.png','r4.png']
+        down_images_paths = [path.join(self.image_folder, filename) for filename in front_file_names]
+        up_images_paths = [path.join(self.image_folder, filename) for filename in back_file_names]
+        left_images_paths = [path.join(self.image_folder, filename) for filename in left_file_names]
+        right_images_paths = [path.join(self.image_folder, filename) for filename in right_file_names]
+        self.loaded_down_images = [pg.image.load(img) for img in down_images_paths]
+        self.loaded_up_images = [pg.image.load(img) for img in up_images_paths]
+        self.loaded_left_images = [pg.image.load(img) for img in left_images_paths]
+        self.loaded_right_images = [pg.image.load(img) for img in right_images_paths]
+        self.images = [self.loaded_down_images, self.loaded_up_images, self.loaded_left_images, self.loaded_right_images]
+
+    def initialize_color(self):
+        for layer in self.color_dict:
+            template_color = self.color_dict[layer]['Template']
+            new_color = self.color_dict[layer]['Current']
+            for img_list in self.images:
+                for img in img_list:
+                    img_arr = pg.PixelArray(img)
+                    img_arr.replace (template_color, new_color)
+                    del img_arr
 
 class Consumable(Item):
     def __init__(self):
@@ -55,6 +81,30 @@ class Armor(Wearable):
     def __init__(self):
         super().__init__()
 
+class Pants(Armor):
+    def __init__(self):
+        pants_folder = path.join(clothes_folder, 'Pants')
+        self.image_folder = path.join(pants_folder, self.folder_name)
+        super().__init__()
+
+    def equip_effect(self, game):
+        game.player.pants = self
+
+    def unequip_effect(self, game):
+        game.player.pants = None
+
+class Shirt(Armor):
+    def __init__(self):
+        shirts_folder = path.join(clothes_folder, 'Shirts')
+        self.image_folder = path.join(shirts_folder, self.folder_name)
+        super().__init__()
+
+    def equip_effect(self, game):
+        game.player.shirt = self
+
+    def unequip_effect(self, game):
+        game.player.shirt = None
+
 class Book(Item):
     def __init__(self):
         super().__init__()
@@ -73,6 +123,7 @@ class LockedItem(Interactable):
 
 class Wand(Wearable):
     def __init__(self, wood, core, length, flex, maker=None):
+        self.image_folder = path.join(img_folder, 'Wands')
         super().__init__()
         #Wand Details
         self.wood = wood
@@ -82,16 +133,6 @@ class Wand(Wearable):
         self.type = 'Wand'
         self.maker = maker
         self.name = f'{self.wood} {self.type}'
-        #Wand Images
-        wand_down_img = [path.join(img_folder, 'wand_f1.png'), path.join(img_folder, 'wand_f2.png'), path.join(img_folder, 'wand_f3.png'), path.join(img_folder, 'wand_f4.png')]
-        wand_up_img = [path.join(img_folder, 'wand_b1.png'), path.join(img_folder, 'wand_b2.png'), path.join(img_folder, 'wand_b3.png'), path.join(img_folder, 'wand_b4.png')]
-        wand_left_img = [path.join(img_folder, 'wand_l1.png'), path.join(img_folder, 'wand_l2.png'), path.join(img_folder, 'wand_l3.png'), path.join(img_folder, 'wand_l4.png')]
-        wand_right_img = [path.join(img_folder, 'wand_r1.png'), path.join(img_folder, 'wand_r2.png'), path.join(img_folder, 'wand_r3.png'), path.join(img_folder, 'wand_r4.png')]
-        wand_down = [pg.image.load(wand_down_img[0]), pg.image.load(wand_down_img[1]), pg.image.load(wand_down_img[2]), pg.image.load(wand_down_img[3])]
-        wand_up = [pg.image.load(wand_up_img[0]), pg.image.load(wand_up_img[1]), pg.image.load(wand_up_img[2]), pg.image.load(wand_up_img[3])]
-        wand_left = [pg.image.load(wand_left_img[0]), pg.image.load(wand_left_img[1]), pg.image.load(wand_left_img[2]), pg.image.load(wand_left_img[3])]
-        wand_right = [pg.image.load(wand_right_img[0]), pg.image.load(wand_right_img[1]), pg.image.load(wand_right_img[2]), pg.image.load(wand_right_img[3])]
-        self.images = [wand_down, wand_up, wand_left, wand_right]
         self.change_color()
 
     def change_wood(self):
@@ -138,43 +179,18 @@ class Broom(Equippable):
 
 class Cloak(Armor):
     def __init__(self):
+        cloaks_folder = path.join(clothes_folder, 'Cloaks')
+        self.image_folder = path.join(cloaks_folder, self.folder_name)
         super().__init__()
-        self.image_folder = path.join(cloaks_folder, self.name)
-        self.main_image_folder = path.join(self.image_folder, 'Main')
-        self.accent_image_folder = path.join(self.image_folder, 'Accent')
-        #self.accent2_image_folder = path.join(self.image_folder, 'Accent2')
-        self.wrinkles_image_folder = path.join(self.image_folder, 'Wrinkles')
-        #Cloak Images
-        self.image = pg.Surface((TILESIZE,TILESIZE))
-        cloak_down_img = [path.join(img_folder, 'f1.png'), path.join(img_folder, 'f2.png'), path.join(img_folder, 'f3.png'), path.join(img_folder, 'f4.png')]
-        cloak_up_img = [path.join(img_folder, 'b1.png'), path.join(img_folder, 'b2.png'), path.join(img_folder, 'b3.png'), path.join(img_folder, 'b4.png')]
-        cloak_left_img = [path.join(img_folder, 'l1.png'), path.join(img_folder, 'l2.png'), path.join(img_folder, 'l3.png'), path.join(img_folder, 'l4.png')]
-        cloak_right_img = [path.join(img_folder, 'r1.png'), path.join(img_folder, 'r2.png'), path.join(img_folder, 'r3.png'), path.join(img_folder, 'r4.png')]
-        cloak_down = [pg.image.load(cloak_down_img[0]), pg.image.load(cloak_down_img[1]), pg.image.load(cloak_down_img[2]), pg.image.load(cloak_down_img[3])]
-        cloak_up = [pg.image.load(cloak_up_img[0]), pg.image.load(cloak_up_img[1]), pg.image.load(cloak_up_img[2]), pg.image.load(cloak_up_img[3])]
-        cloak_left = [pg.image.load(cloak_left_img[0]), pg.image.load(cloak_left_img[1]), pg.image.load(cloak_left_img[2]), pg.image.load(cloak_left_img[3])]
-        cloak_right = [pg.image.load(cloak_right_img[0]), pg.image.load(cloak_right_img[1]), pg.image.load(cloak_right_img[2]), pg.image.load(cloak_right_img[3])]
-        self.images = [cloak_down, cloak_up, cloak_left, cloak_right]
-        self.change_color()
-
 
     def get_details(self):
         return {}
 
-    def get_images(self):
-        for folder in [self.main_image_folder, self.accent_image_folder, self.wrinkles_image_folder]:
-            front_images = [path.join(folder, 'f1.png'), path.join(folder, 'f2.png'), path.join(folder, 'f3.png'), path.join(folder, 'f4.png')]
-            back_images = [path.join(folder, 'b1.png'), path.join(folder, 'b2.png'), path.join(folder, 'b3.png'), path.join(folder, 'b4.png')]
-            left_images = [path.join(folder, 'l1.png'), path.join(folder, 'l2.png'), path.join(folder, 'l3.png'), path.join(folder, 'l4.png')]
-            right_images = [path.join(folder, 'r1.png'), path.join(folder, 'r2.png'), path.join(folder, 'r3.png'), path.join(folder, 'r4.png')]
-            all_img_paths = [front_images, back_images, left_images, right_images]
-            
-
     def equip_effect(self, game):
-        pass
+        game.player.cloak = self
 
     def unequip_effect(self, game):
-        pass
+        game.player.cloak = None
 
     def draw(self):
         pass
@@ -267,7 +283,11 @@ wand = Wand('Larch', 'Dragon Heartstring', '11 inches', 'Swishy')
 wand2 = Wand('Elder', 'Unicorn Hair', '10 inches', 'Springy')
 cauldron = Cauldron('Black Cauldron')
 cloak = InvisibilityCloak()
+from cloaks import HogwartsCloak, BasicPants, HogwartsTie
+pants = BasicPants()
+cloak2 = HogwartsCloak(GryffindorHouse)
+shirt = HogwartsTie(GryffindorHouse)
 broom = Broom('Nimbus 2000')
 juice = PumpkinJuice()
-test_inventory = [wand, wand2, cauldron, cloak, broom, juice]
+test_inventory = [wand, wand2, cauldron, cloak, cloak2, broom, juice, shirt, pants]
 print(type(wand))

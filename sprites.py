@@ -3,6 +3,7 @@ from settings import *
 from items import *
 from dialouges import *
 from specialNPCs import *
+from houses import GryffindorHouse, SlytherinHouse, HufflepuffHouse, RavenclawHouse
 from blanks import change_color, img_folder, game_folder, walk_up_img, walk_down_img, walk_left_img, walk_right_img, hair_list, hairColors
 from os import path
 import random
@@ -136,7 +137,7 @@ class Player(pg.sprite.Sprite):
 
     def draw(self, game):
         game.screen.blit(self.image, self.game.camera.apply(self))
-        for item in [self.hat, self.shirt, self.cloak, self.wand]:
+        for item in [self.hat, self.pants, self.shirt, self.cloak, self.wand]:
             if item != None:
                 game.screen.blit(item.images[self.dir][self.walk_count // 6], self.game.camera.apply(self))
 
@@ -217,9 +218,9 @@ class NPC(pg.sprite.Sprite):
         self.introduced = False
         #Wearables
         self.hat = None
-        self.cloak = None
-        self.shirt = None
-        self.pants = None
+        self.cloak = HogwartsCloak(RavenclawHouse)
+        self.shirt = HogwartsTie(RavenclawHouse)
+        self.pants = BasicPants()
         self.wand = None
 
     def move(self):
@@ -358,7 +359,7 @@ class NPC(pg.sprite.Sprite):
     def get_npc_dialog(self):
         if not self.introduced:
             dialog = f"Hi I'm {self.name}"
-            self.game.STATE_DICT['text'].draw_dialog(self.name, dialog)
+            #self.game.STATE_DICT['text'].draw_dialog(self.name, dialog)
             self.introduced = True
         elif self.name in Special_NPCs:
             topic = random.choice(list(Special_NPCs[self.name].keys()))
@@ -376,7 +377,7 @@ class NPC(pg.sprite.Sprite):
 
     def draw(self, game):
         game.screen.blit(self.image, self.game.camera.apply(self))
-        for item in [self.hat, self.shirt, self.cloak, self.wand]:
+        for item in [self.hat, self.pants, self.shirt, self.cloak, self.wand]:
             if item != None:
                 game.screen.blit(item.images[self.dir][self.walk_count // 6], self.game.camera.apply(self))
 

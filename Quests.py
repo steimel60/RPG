@@ -49,8 +49,6 @@ class TestQuest(Quest):
     def activate_quest(self):
         if self.check_prereqs():
             self.active = True
-            #self.game.textbox.draw_box()
-            #self.game.textbox.draw_dialogue(self.giver, self.initialDialog)
             self.activeSpeakers = ['Logan', 'DJ']
             return self.initialDialog
 
@@ -81,22 +79,16 @@ class TestQuest(Quest):
     #Quest Specific
     def talk_to_dj(self):
         dialog = f"Hm.. I wonder what Logan wants"
-        #self.game.textbox.draw_box()
-        #self.game.textbox.draw_dialogue('DJ', dialog)
         self.talkedToDJ = True
         self.activeSpeakers = ['Logan']
         return dialog
 
     def logan_in_progress_dialog(self):
         dialog = f"You still need to find DJ"
-        #self.game.textbox.draw_box()
-        #self.game.textbox.draw_dialogue('Logan', dialog)
         return dialog
 
     def logan_quest_complete(self):
         dialog = f"Thanks! Take this chocolate frog card."
-        #self.game.textbox.draw_box()
-        #self.game.textbox.draw_dialogue('Logan', dialog)
         self.game.ItemHandler.add_item_to_inventory(ChocolateFrogCard('Neville Longbottom'))
         self.complete = True
         return dialog

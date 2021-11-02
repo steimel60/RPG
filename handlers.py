@@ -109,12 +109,12 @@ class SpellHandler():
         player_y = self.game.player.y
         if self.game.player.dir == 0: #Down
             for sprite in self.game.interactables:
-                if sprite.x == player_x and sprite.y == player_y + TILESIZE:
+                if sprite.x == player_x and sprite.y == player_y + 2*TILESIZE:
                     if isinstance(sprite, Item):
                         return sprite
         elif self.game.player.dir == 1: #Up
             for sprite in self.game.interactables:
-                if sprite.x == player_x and sprite.y == player_y - TILESIZE:
+                if sprite.x == player_x and sprite.y == player_y:
                     if isinstance(sprite, Item):
                         return sprite
         elif self.game.player.dir == 2: #Left

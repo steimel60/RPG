@@ -4,7 +4,6 @@ from os import path
 game_folder = path.dirname(__file__)
 img_folder = path.join(game_folder, 'img')
 clothes_folder = path.join(img_folder, 'Clothing')
-cloaks_folder = path.join(clothes_folder, 'Cloaks')
 font_folder = path.join(game_folder, 'Fonts')
 
 # define some colors (R, G, B)
