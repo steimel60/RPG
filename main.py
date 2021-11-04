@@ -74,7 +74,8 @@ class Game:
             if tile_object.name == "door":
                 self.door = Door(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.door_id, tile_object.to_level, tile_object.exit_dir)
             if tile_object.name == "NPC":
-                self.npc = NPC(self, tile_object.dir, tile_object.x, tile_object.y, tile_object.path_id, tile_object.name_id, tile_object.skin_id, tile_object.hair_id, tile_object.hair_color)
+                #self.npc = NPC(self, tile_object.dir, tile_object.x, tile_object.y, tile_object.path_id, tile_object.name_id, tile_object.skin_id, tile_object.hair_id, tile_object.hair_color)
+                self.npc = NPC(self, tile_object.dir, tile_object.x, tile_object.y, tile_object.path_id, tile_object.name_id)
             if tile_object.name == "walk_path":
                 self.walk_path = Walk_Path(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.path_id)
             if tile_object.name == "shop":

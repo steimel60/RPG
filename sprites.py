@@ -7,6 +7,7 @@ from houses import GryffindorHouse, SlytherinHouse, HufflepuffHouse, RavenclawHo
 from blanks import change_color, img_folder, game_folder, walk_up_img, walk_down_img, walk_left_img, walk_right_img, hair_list, hairColors
 from os import path
 import random
+from NPC_data import Special_NPCs, RandomNPCDataGenerator
 
 class Obstacle(pg.sprite.Sprite):
     def __init__(self, game, x, y, w, h):
@@ -149,7 +150,7 @@ class Player(pg.sprite.Sprite):
                     interactable.check_interactions()
         if self.dir == 1: #up
             for interactable in self.game.interactables:
-                if interactable.x == self.x and interactable.y == self.y:
+                if interactable.x == self.x and interactable.y + interactable.h - TILESIZE == self.y:
                     interactable.dir=0
                     interactable.check_interactions()
         if self.dir == 2: #left
@@ -177,7 +178,19 @@ class Player(pg.sprite.Sprite):
         self.get_image()
 
 class NPC(pg.sprite.Sprite):
-    def __init__(self, game, dir, x, y, path_id, name, skin_id, hair_id, hair_color):
+    def __init__(self, game, dir, x, y, path_id, name_id):
+        ### Get or Randomize Features ###
+        self.generator = self.check_if_special_npc(name_id)
+        self.name_id = name_id
+        self.name = self.get_npc_attribute('Name')
+        skin_id = self.get_npc_attribute('Skin ID')
+        hair_id = self.get_npc_attribute('Hair ID')
+        hair_color = self.get_npc_attribute('Hair Color')
+        self.hat = None
+        self.cloak = self.get_npc_attribute('Cloak')
+        self.shirt = self.get_npc_attribute('Shirt')
+        self.pants = self.get_npc_attribute('Pants')
+        self.wand = None
         ### Load Images ###
         npc_down = [pg.image.load(walk_down_img[0]), pg.image.load(walk_down_img[1]), pg.image.load(walk_down_img[2]), pg.image.load(walk_down_img[3])]
         npc_up = [pg.image.load(walk_up_img[0]), pg.image.load(walk_up_img[1]), pg.image.load(walk_up_img[2]), pg.image.load(walk_up_img[3])]
@@ -201,6 +214,7 @@ class NPC(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+        self.h = TILESIZE*2
         ### Movement Control ###
         self.moving = False
         self.moving_up = False
@@ -214,15 +228,8 @@ class NPC(pg.sprite.Sprite):
         self.collide_wait = False
         self.text = False
         ### Unique IDs ###
-        self.name = name
         self.introduced = False
-        #Wearables
-        self.hat = None
-        self.cloak = HogwartsCloak(RavenclawHouse)
-        self.shirt = HogwartsTie(RavenclawHouse)
-        self.pants = BasicPants()
-        self.wand = None
-
+        
     def move(self):
         if self.walk_count + 1 > 23:
             self.walk_count = 0
@@ -398,6 +405,18 @@ class NPC(pg.sprite.Sprite):
                     if event.key == pg.K_SPACE:
                         hit_space = True
         self.game.current_state = state
+
+    def get_npc_attribute(self, attr):
+        if self.name_id in Special_NPCs:
+            return Special_NPCs[self.name_id][attr]
+        else:
+            return self.generator.data_dict[attr]
+
+    def check_if_special_npc(self, name):
+        if name in Special_NPCs:
+            return None
+        else:
+            return RandomNPCDataGenerator()
 
     def update(self):
         self.find_path()

@@ -4,7 +4,7 @@ from items import *
 import random
 
 class Shop(pg.sprite.Sprite):
-    def __init__(self, game, x, y, h, w, shop_id):
+    def __init__(self, game, x, y, w, h, shop_id):
         self.groups = game.shops, game.interactables
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game

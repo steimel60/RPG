@@ -1,9 +1,12 @@
 from items import *
 
 class Quest():
-    def __init__(self):
+    def __init__(self, game):
         self.active = False
-        self.step_tracker = None
+        self.game = game
+
+    def has_dialog(self, name):
+        return name in self.activeSpeakers
 
 class TalkToEverybody(Quest):
     def __init__(self):
@@ -14,7 +17,12 @@ class TalkToEverybody(Quest):
         self.step_tracker = {
                 'Activate':{'Prereqs': None,
                             'Dialog':{'Logan':'Go talk to DJ and Loren'},
-                            'Hint':'Find DJ and Loren'}
+                            'Hint':'Find DJ and Loren'},
+                'Main':{'Prereqs':[self.active],
+                        'Dialog':{'Logan':'Go talk to DJ and Loren',
+                                'DJ':'You are doing a quest?',
+                                'Loren':'Ah my brother beckons me?'},
+                        'Hint':'Find DJ and Loren'}
         }
 
     def update(self, interactable):
@@ -35,8 +43,7 @@ class TalkToEverybody(Quest):
 
 class TestQuest(Quest):
     def __init__(self, game):
-        self.game = game
-        self.active = False
+        super().__init__(game)
         self.name = "Logan's Friend"
         self.prereqs = []
         self.giver = 'Logan'
@@ -65,17 +72,17 @@ class TestQuest(Quest):
     def get_quest_dialog(self, name):
         if self.check_prereqs() == False:
             return 'NODIALOG'
+        #Do Quest
         if name == 'DJ' and self.active and not self.talkedToDJ:
             dialog = self.talk_to_dj()
         elif name == 'Logan' and self.active and not self.talkedToDJ:
             dialog = self.logan_in_progress_dialog()
+        #Finish
         elif name == 'Logan' and self.talkedToDJ:
             dialog = self.logan_quest_complete()
 
         return dialog
 
-    def has_dialog(self, name):
-        return name in self.activeSpeakers
     #Quest Specific
     def talk_to_dj(self):
         dialog = f"Hm.. I wonder what Logan wants"
@@ -95,8 +102,7 @@ class TestQuest(Quest):
 
 class TradeWithLoren(Quest):
     def __init__(self, game):
-        self.game = game
-        self.active = False
+        super().__init__(game)
         self.name = 'Trade Cards'
         self.prereqs = None
         self.giver = 'Loren'
@@ -109,9 +115,8 @@ class TradeWithLoren(Quest):
     def activate_quest(self):
         if self.check_prereqs():
             self.active = True
-            self.game.textbox.draw_box()
-            self.game.textbox.draw_dialogue(self.giver, self.initialDialog)
             self.activeSpeakers = ['Loren']
+            return self.initialDialog
 
     def check_prereqs(self):
         prereqs_met = any(isinstance(x, ChocolateFrogCard) for x in self.game.ItemHandler.inventory)
@@ -119,15 +124,11 @@ class TradeWithLoren(Quest):
 
     def get_quest_dialog(self, name):
         if name == 'Loren' and self.active and not self.tradedCard:
-            self.be_asked_to_trade()
-            return self.has_dialog()
+            dialog = self.be_asked_to_trade()
+        return dialog
 
-    def has_dialog(self):
-        return True
     #Quest Specific
     def be_asked_to_trade(self):
         dialog = "Let's trade cards!"
-        self.game.textbox.draw_box()
-        self.game.textbox.draw_dialogue('Loren', dialog)
-        self.talkedToDJ = True
         self.activeSpeakers = ['Loren']
+        return dialog
