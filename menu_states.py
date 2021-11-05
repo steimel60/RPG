@@ -242,12 +242,8 @@ class InventoryState():
         if isinstance(item, Equippable):
             self.game.ItemHandler.equip_item(item)
         else:
-            self.game.textbox.draw_box()
             text = f'{item.name} is not equippable!'
-            self.game.textbox.draw_text(text)
-            self.draw()
-            self.wait_for_key_up()
-            self.game.textbox.close_box()
+            self.game.STATE_DICT['text'].draw_text(text)
 
     def unequip(self, item):
         self.game.ItemHandler.unequip_item(item)

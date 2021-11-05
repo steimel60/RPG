@@ -63,23 +63,23 @@ class Player(pg.sprite.Sprite):
     def move(self):
         if self.walk_count + 1 > 23:
             self.walk_count = 0
-        if self.moving and not self.collides():
-            if self.target_x > self.x: #rightt
-                self.x += self.speed
-                self.walk_count += 1
-                self.dir = 3
-            elif self.target_x < self.x: #left
-                self.x -= self.speed
-                self.walk_count += 1
-                self.dir = 2
-            elif self.target_y > self.y: #down
-                self.y += self.speed
-                self.walk_count += 1
-                self.dir = 0
-            elif self.target_y < self.y: #up
-                self.y -= self.speed
-                self.walk_count += 1
-                self.dir = 1
+        #if self.moving:
+        if self.target_x > self.x: #rightt
+            self.x += self.speed
+            self.walk_count += 1
+            self.dir = 3
+        elif self.target_x < self.x: #left
+            self.x -= self.speed
+            self.walk_count += 1
+            self.dir = 2
+        elif self.target_y > self.y: #down
+            self.y += self.speed
+            self.walk_count += 1
+            self.dir = 0
+        elif self.target_y < self.y: #up
+            self.y -= self.speed
+            self.walk_count += 1
+            self.dir = 1
         else:
             self.target_x = self.x
             self.target_y = self.y
@@ -90,6 +90,8 @@ class Player(pg.sprite.Sprite):
 
     def get_keys(self):
         keys = pg.key.get_pressed()
+        old_x = self.x
+        old_y = self.y
         if (keys[pg.K_LEFT] or keys[pg.K_a]) and self.moving == False:
             self.target_x -= TILESIZE
             self.dir = 2
@@ -106,6 +108,9 @@ class Player(pg.sprite.Sprite):
             self.target_y += TILESIZE
             self.dir = 0
             self.moving = True
+        if self.collides():
+            self.target_x = old_x
+            self.target_y = old_y
 
     def collide_with_walls(self):
         for wall in self.game.walls:
@@ -178,7 +183,7 @@ class Player(pg.sprite.Sprite):
         self.get_image()
 
 class NPC(pg.sprite.Sprite):
-    def __init__(self, game, dir, x, y, path_id, name_id):
+    def __init__(self, game, dir, x, y, name_id):
         ### Get or Randomize Features ###
         self.generator = self.check_if_special_npc(name_id)
         self.name_id = name_id
@@ -215,6 +220,7 @@ class NPC(pg.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
         self.h = TILESIZE*2
+        self.w = TILESIZE
         ### Movement Control ###
         self.moving = False
         self.moving_up = False
@@ -223,17 +229,23 @@ class NPC(pg.sprite.Sprite):
         self.moving_right = False
         self.walk_count = 0
         self.dir = dir
-        self.path_id = path_id
         self.initial_collide = False
         self.collide_wait = False
         self.text = False
+        #Testing
+        self.on_path = False
+        self.path_min_x = None
+        self.path_max_x = None
+        self.path_min_y = None
+        self.path_max_y = None
         ### Unique IDs ###
         self.introduced = False
-        
+        self.wander_wait = 1000
+
     def move(self):
-        if self.walk_count + 1 > 23:
+        if self.walk_count + 1 > 23 or not self.moving:
             self.walk_count = 0
-        if self.moving:
+        if self.moving and not self.initial_collide:
             """
             move by 4 pixles until reaching target x,y
             """
@@ -243,91 +255,109 @@ class NPC(pg.sprite.Sprite):
                 self.x += WALK_SPEED
                 self.walk_count += 1
                 self.dir = 3
-            if self.target_x < self.x: #left
+            elif self.target_x < self.x: #left
                 self.x -= WALK_SPEED
                 self.walk_count += 1
                 self.dir = 2
-            if self.target_y > self.y: #down
+            elif self.target_y > self.y: #down
                 self.y += WALK_SPEED
                 self.walk_count += 1
                 self.dir = 0
-            if self.target_y < self.y: #up
+            elif self.target_y < self.y: #up
                 self.y -= WALK_SPEED
                 self.walk_count += 1
                 self.dir = 1
-        else:
-            if self.moving_up:
-                self.dir = 1
-            if self.moving_down:
-                self.dir = 0
-            if self.moving_left:
-                self.dir = 2
-            if self.moving_right:
-                self.dir = 3
+            else:
+                self.moving = False
+
+    def wander(self):
+        if not self.moving and not self.initial_collide:
+            self.wander_wait += self.game.dt
+            randome_wait_time = random.choice([1,2,2.3,2.5,3,3.1])
+            if self.wander_wait > randome_wait_time:
+                #Get possible distances by dir
+                left_tile_range = int((self.x - self.path_min_x)//TILESIZE)
+                right_tile_range = int((self.path_max_x - self.x)//TILESIZE)
+                up_tile_range = int((self.y - self.path_min_y)//TILESIZE)
+                down_tile_range = int((self.path_max_y - self.y)//TILESIZE)
+                #Pick random direction
+                possible_dirs = []
+                if left_tile_range != 0:
+                    possible_dirs.append('left')
+                if right_tile_range != 0:
+                    possible_dirs.append('right')
+                if up_tile_range != 0:
+                    possible_dirs.append('up')
+                if down_tile_range != 0:
+                    possible_dirs.append('down')
+                dir = random.choice(possible_dirs)
+                #Set Target Loc
+                if dir =='left' and left_tile_range != 0:
+                    tile_count = random.choice([x for x in range(left_tile_range)])
+                    if tile_count != 0:
+                        self.target_x -= tile_count*TILESIZE
+                        self.dir = 2
+                        self.moving = True
+                if dir =='right' and right_tile_range != 0:
+                    tile_count = random.choice([x for x in range(right_tile_range)])
+                    if tile_count != 0:
+                        self.target_x += tile_count*TILESIZE
+                        self.dir = 3
+                        self.moving = True
+                if dir =='up' and up_tile_range != 0:
+                    tile_count = random.choice([x for x in range(up_tile_range)])
+                    if tile_count != 0:
+                        self.target_y -= tile_count*TILESIZE
+                        self.dir = 1
+                        self.moving = True
+                if dir =='down' and down_tile_range != 0:
+                    tile_count = random.choice([x for x in range(down_tile_range)])
+                    if tile_count != 0:
+                        self.target_y += tile_count*TILESIZE
+                        self.dir = 0
+                        self.moving = True
+                self.wander_wait = 0
 
     def find_path(self):
-        if self.path_id != -1:
-            for path in self.game.walk_paths:
-                if path.path_id == self.path_id:
-                    current_path = path
-                """
-                Check if path is vertical or horizontal, npc is width of tile that's why we compare width and height to tile size
-                right now path is either 1 tile wide or tall, then extended in other direction
-                """
-            if current_path.w > TILESIZE:
-                if self.x == current_path.x: #if at left of path move right
-                    self.target_x = current_path.x + current_path.w
-                    self.moving_right = True
-                    self.moving_left = False
-                if self.x == current_path.x + current_path.w: #if at right of path move left
-                    self.target_x = current_path.x
-                    self.moving_left = True
-                    self.moving_right = False
-            if current_path.h > TILESIZE:
-                if self.y == current_path.y: #when at top of path move down
-                    self.target_y = current_path.y + current_path.h
-                    self.moving_down = True
-                    self.moving_up = False
-                if self.y == current_path.y + current_path.h: #when at bottom of path move up
-                    self.target_y = current_path.y
-                    self.moving_up = True
-                    self.moving_down = False
-            if not self.moving:
-                self.moving = True
-                if self.moving_up:
-                    self.target_y = current_path.y
-                elif self.moving_down:
-                    self.target_y = current_path.y + current_path.h
-                elif self.moving_left:
-                    self.target_x = current_path.x
-                elif self.moving_right:
-                    self.target_x = current_path.x + current_path.w
-                else:
-                    self.target_x = current_path.x
-                    self.target_y = current_path.y
+        for path in self.game.walk_paths:
+            if self.x >= path.x and self.x + self.w <= path.x + path.w and self.y >= path.y and self.y + TILESIZE <= path.y + path.h:
+                self.on_path = True
+                self.path_min_x = path.x
+                self.path_max_x = path.x + path.w - self.w
+                self.path_min_y = path.y
+                self.path_max_y = path.y + path.h - TILESIZE
+                self.wander()
 
     def collides(self):
-        for player in self.game.user_group:
-            if player.target_x == self.x and player.target_y == self.y + TILESIZE and self.moving_down:
-                self.moving = False
-                self.walk_count = 0
-                player.dir = 1
-                self.initial_collide = True
-            if player.target_x == self.x and player.target_y == self.y - TILESIZE and self.moving_up:
-                self.moving = False
-                self.walk_count = 0
-                player.dir = 0
-                self.initial_collide = True
-            if player.target_x == self.x - TILESIZE and player.target_y == self.y and self.moving_left:
-                self.moving = False
-                self.walk_count = 0
-                player.dir = 3
-                self.initial_collide = True
-            if player.target_x == self.x + TILESIZE and player.target_y == self.y and self.moving_right:
-                self.moving = False
-                self.walk_count = 0
-                player.dir = 2
-                self.initial_collide = True
+        if self.moving and not self.initial_collide:
+            for player in self.game.user_group:
+                if player.target_x == self.x and player.target_y == self.y + TILESIZE and self.dir == 0:
+                    self.moving = False
+                    self.walk_count = 0
+                    player.dir = 1
+                    self.initial_collide = True
+                if player.target_x == self.x and player.target_y == self.y - TILESIZE and self.dir == 1:
+                    self.moving = False
+                    self.walk_count = 0
+                    player.dir = 0
+                    self.initial_collide = True
+                if player.target_x == self.x - TILESIZE and player.target_y == self.y and self.dir == 2:
+                    self.moving = False
+                    self.walk_count = 0
+                    player.dir = 3
+                    self.initial_collide = True
+                if player.target_x == self.x + TILESIZE and player.target_y == self.y and self.dir == 3:
+                    self.moving = False
+                    self.walk_count = 0
+                    player.dir = 2
+                    self.initial_collide = True
+
+                if self.initial_collide:
+                    while (player.target_x != player.x or player.target_y != player.y):
+                        waiting = True
+                        player.update()
+                        self.game.draw()
+                    self.check_interactions()
 
     def textbox_check(self):
         if self.initial_collide == True:
@@ -365,16 +395,15 @@ class NPC(pg.sprite.Sprite):
 
     def get_npc_dialog(self):
         if not self.introduced:
+            print('Introduction dialog')
             dialog = f"Hi I'm {self.name}"
             #self.game.STATE_DICT['text'].draw_dialog(self.name, dialog)
             self.introduced = True
         elif self.name in Special_NPCs:
-            topic = random.choice(list(Special_NPCs[self.name].keys()))
-            if topic == 'House':
-                dialog = random.choice([f"I'm in {Special_NPCs[self.name][topic]}!", f"{Special_NPCs[self.name][topic]} is the best house at Hogwarts!"])
-            elif topic == 'Pet':
-                dialog = random.choice([f"I just got a pet {Special_NPCs[self.name][topic]}!", f"My {Special_NPCs[self.name][topic]}'s name is {self.name} Jr."])
+            print('Special Dialog')
+            dialog = 'I am a special NPC I will spawn here every time!'
         else:
+            print('Generic dialog')
             dialog = f"I'm not important. This is a really long string that won't fit in the textbox unless we wrap it. So I made a text wrap func and going to try it out with this string. If a string is really really really long it might go on to the next page and my function should be able to hande that as well. The font is small so there has to be a lot of words in order to need mulitple pages, but if there is a monologue it may be useful. This last sentence should now be long enough that you will have to see a second page."
         return dialog
 
@@ -479,6 +508,17 @@ class SideMenu():
 
     def clear(self):
         self.image.fill(WHITE)
+
+class MenuItem():
+    def __init__(self, game):
+        #self.groups = game.all_sprites, game.textbox
+        #pg.sprite.Sprite.__init__(self, self.groups)
+        self.game = game
+        self.width = SIDE_MENU_W
+        self.height = SIDE_MENU_H
+        self.image = pg.Surface((self.width,self.height))
+        self.image.fill(WHITE)
+        self.font = pg.font.Font('freesansbold.ttf', 12)
 
 class Gate(pg.sprite.Sprite, LockedItem):
     def __init__(self, game, x, y, w, h, level, locked):

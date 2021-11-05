@@ -17,6 +17,10 @@ class GameplayState():
                 if event.key == pg.K_SPACE:
                     self.game.player.check_for_interactions()
                 if event.key == pg.K_i:
+                    #for player in self.game.user_group:
+                    #    while (player.target_x != player.x or player.target_y != player.y):
+                    #        player.update()
+                    #        self.draw()
                     self.game.current_state = 'menu'
                     self.game.STATE_DICT['menu'].open_inventory()
                 if event.key == pg.K_c:
@@ -41,7 +45,6 @@ class GameplayState():
 
     def update(self):
         self.game.all_sprites.update()
-        #self.game.textbox.update()
         self.game.camera.update(self.game.player)
         self.game.check_level()
 
