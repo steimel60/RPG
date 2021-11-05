@@ -138,11 +138,12 @@ class Player(pg.sprite.Sprite):
         return False
 
     def get_image(self):
-        self.images[self.dir][self.walk_count // 6].blit(self.hair[self.dir], (0,0))
+        #self.images[self.dir][self.walk_count // 6].blit(self.hair[self.dir], (0,0))
         self.image = self.images[self.dir][self.walk_count // 6]
 
     def draw(self, game):
         game.screen.blit(self.image, self.game.camera.apply(self))
+        game.screen.blit(self.hair[self.dir], (self.game.camera.apply(self)[0], self.game.camera.apply(self)[1]-2*(self.walk_count//6%2!=0)))
         for item in [self.hat, self.pants, self.shirt, self.cloak, self.wand]:
             if item != None:
                 game.screen.blit(item.images[self.dir][self.walk_count // 6], self.game.camera.apply(self))
@@ -245,12 +246,10 @@ class NPC(pg.sprite.Sprite):
     def move(self):
         if self.walk_count + 1 > 23 or not self.moving:
             self.walk_count = 0
-        if self.moving and not self.initial_collide:
+        if self.moving:
             """
             move by 4 pixles until reaching target x,y
             """
-            self.initial_collide = False
-            self.collide_wait = True  ## Player has moved since first colliding
             if self.target_x > self.x: #right
                 self.x += WALK_SPEED
                 self.walk_count += 1
@@ -408,14 +407,16 @@ class NPC(pg.sprite.Sprite):
         return dialog
 
     def get_image(self):
-        self.images[self.dir][self.walk_count // 6].blit(self.hair[self.dir], (0,0))
+        #self.images[self.dir][self.walk_count // 6].blit(self.hair[self.dir], (0,(self.walk_count%2)*2))
         self.image = self.images[self.dir][self.walk_count // 6]
 
     def draw(self, game):
-        game.screen.blit(self.image, self.game.camera.apply(self))
+        rect_with_camera_offset = self.game.camera.apply(self)
+        game.screen.blit(self.image, rect_with_camera_offset)
+        game.screen.blit(self.hair[self.dir], (rect_with_camera_offset[0], rect_with_camera_offset[1]-2*(self.walk_count//6%2!=0)))
         for item in [self.hat, self.pants, self.shirt, self.cloak, self.wand]:
             if item != None:
-                game.screen.blit(item.images[self.dir][self.walk_count // 6], self.game.camera.apply(self))
+                game.screen.blit(item.images[self.dir][self.walk_count // 6], rect_with_camera_offset)
 
     def draw_dialog(self, dialog):
         #Allow NPC to turn before textbox is open

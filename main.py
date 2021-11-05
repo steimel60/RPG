@@ -27,7 +27,8 @@ class Game:
             'gameplay': states.GameplayState(self),
             'shop' : states.ShopState(self),
             'menu' : states.MenuState(self),
-            'text' : states.TextState(self)
+            'text' : states.TextState(self),
+            'scene': states.SceneState(self)
         }
         self.current_state = 'gameplay'
         #Handlers
@@ -35,9 +36,10 @@ class Game:
         self.SpellHandler = SpellHandler(self)
 
     def init_quests(self):
+        quest0 = GetAWand(self)
         quest1 = TestQuest(self)
         quest2 = TradeWithLoren(self)
-        quests = [quest1, quest2]
+        quests = [quest0, quest1, quest2]
         return quests
 
     def init_main_quests(self):
@@ -55,6 +57,7 @@ class Game:
         self.map_rect = self.map_img.get_rect()
 
     def new(self, from_door=[False]):
+        self.dt = self.clock.tick(FPS) / 1000
         self.all_sprites = pg.sprite.Group()
         self.doors = pg.sprite.Group()
         self.user_group = pg.sprite.Group()
@@ -107,11 +110,11 @@ class Game:
                         self.player = Player(self, door.x+TILESIZE, door.y)
                         self.player.dir = 3
                         self.player.equipped_effects()
+
         #Set Others
         self.camera = Camera(self.map.width, self.map.height)
         self.textbox = Textbox(self, self.player.x, self.player.y)
         self.side_menu = SideMenu(self)
-
 
     def check_level(self):
         for door in self.doors:
@@ -123,11 +126,16 @@ class Game:
                     self.load_data(self.level)
                     self.new(from_door=[True,door_id,exit_dir])
 
+    def check_quests(self):
+        #Check for quest scenes
+        for quest in self.quests:
+            if quest.active and quest.has_scene_by_map_load:
+                quest.quest_step_by_load()
+
 ###Game Loop
     def run(self):
         self.playing = True
         while self.playing:
-            self.dt = self.clock.tick(FPS) / 1000
             self.events()
             self.update()
             self.draw()

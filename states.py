@@ -36,6 +36,7 @@ class GameplayState():
                     #skin_select(self)
 
     def draw(self):
+        self.game.clock.tick(FPS) / 1000
         self.game.screen.blit(self.game.map_img, self.game.camera.apply_rect(self.game.map_rect))
         self.game.draw_grid()
         for sprite in self.game.all_sprites:
@@ -44,9 +45,11 @@ class GameplayState():
         pg.display.flip()
 
     def update(self):
+        self.game.check_level()
         self.game.all_sprites.update()
         self.game.camera.update(self.game.player)
-        self.game.check_level()
+
+        self.game.check_quests()
 
 class ShopState():
     def __init__(self, game):
@@ -61,6 +64,7 @@ class ShopState():
         self.purchased_item = None
         self.dialog_state = 'dialog'
         self.ans = 'yes'
+        self.purchase_made = False
         #Text data
         self.text = None
         self.fontLocs = []
@@ -240,18 +244,27 @@ class ShopState():
                 self.shop.shop.special_buy(self, self.purchased_item)
             else:
                 self.purchased_item = self.shop.shop.items[item]['Item']
-            #pay and recieve item
-            remaining_knuts = player_knuts - cost_knuts
-            galleons = remaining_knuts // 493
-            remaining_knuts -= galleons*493
-            sickles = remaining_knuts // 29
-            remaining_knuts -= sickles*29
-            knuts = remaining_knuts
-            self.game.ItemHandler.add_item_to_inventory(self.purchased_item)
-            #set player money
-            self.game.ItemHandler.galleons = galleons
-            self.game.ItemHandler.sickles = sickles
-            self.game.ItemHandler.knuts = knuts
+            #confirm purchase
+            self.dialog_state = 'temp'
+            text = f'Are you sure you want to buy 1 {self.purchased_item.name}?'
+            answers = ['Yes', 'No']
+            ans = self.game.STATE_DICT['text'].ask_question(self.shop.shop.clerk, text, answers)
+            self.dialog_state = 'dialog'
+            if ans == 'Yes':
+                self.purchase_made = True
+                #pay and recieve item
+                remaining_knuts = player_knuts - cost_knuts
+                galleons = remaining_knuts // 493
+                remaining_knuts -= galleons*493
+                sickles = remaining_knuts // 29
+                remaining_knuts -= sickles*29
+                knuts = remaining_knuts
+                self.game.ItemHandler.add_item_to_inventory(self.purchased_item)
+                #set player money
+                self.game.ItemHandler.galleons = galleons
+                self.game.ItemHandler.sickles = sickles
+                self.game.ItemHandler.knuts = knuts
+
             self.continue_shopping()
 
     def continue_shopping(self):
@@ -265,7 +278,10 @@ class ShopState():
             self.dialog_state = 'dialog'
         if ans == 'No':
             self.dialog_state = 'dialog'
-            self.text = f'Enjoy your {self.purchased_item.name}!'
+            if self.purchase_made:
+                self.text = f'Enjoy your {self.purchased_item.name}!'
+            else:
+                self.text = f'Have a good day!'
             self.draw()
             self.wait_for_key_up()
             self.close_shop()
@@ -398,6 +414,9 @@ class TextState():
                 print(f'Word counter: {word_counter}')
                 print(f'Word List: {word_list}')
             self.draw()
+            wait = 0
+            while wait < .7:
+                wait += self.game.dt
             self.wait_for_key_up()
         self.exit_text_state()
 
@@ -438,6 +457,9 @@ class TextState():
             else:
                 word_list = word_list[word_counter-1:]
             self.draw()
+            wait = 0
+            while wait < .7:
+                wait += self.game.dt
             self.wait_for_key_up()
         self.exit_text_state()
 
@@ -522,3 +544,31 @@ class TextState():
 
     def update(self):
         pass
+
+class SceneState():
+    def __init__(self, game):
+        self.game = game
+        self.last_state = None
+
+    def enter_scene_state(self):
+        self.last_state = self.game.current_state
+        self.game.current_state = 'scene'
+
+    def exit_scene_state(self):
+        self.game.current_state = self.last_state
+        self.game.textbox.close_box()
+        self.last_state = None
+
+    def events(self):
+        pass
+
+    def update(self):
+        pass
+
+    def draw(self):
+        #self.game.clock.tick(FPS) / 1000
+        self.game.STATE_DICT[self.last_state].draw()
+
+    def update(self):
+        self.game.clock.tick(FPS) / 1000
+        self.game.STATE_DICT[self.last_state].update()
