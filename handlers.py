@@ -10,7 +10,7 @@ class ItemHandler():
         self.sickles = 2
         self.knuts = 12
         self.inventory = test_inventory
-        self.equipped = []
+        self.equipped = [HogwartsTie(GryffindorHouse), HogwartsCloak(GryffindorHouse), BasicPants()]
         self.inventory_length = len(self.inventory) + len(self.equipped)
 
     def add_item_to_inventory(self, item):

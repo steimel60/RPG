@@ -284,10 +284,7 @@ wand2 = Wand('Elder', 'Unicorn Hair', '10 inches', 'Springy')
 cauldron = Cauldron('Black Cauldron')
 cloak = InvisibilityCloak()
 from cloaks import HogwartsCloak, BasicPants, HogwartsTie
-pants = BasicPants()
-cloak2 = HogwartsCloak(GryffindorHouse)
-shirt = HogwartsTie(GryffindorHouse)
 broom = Broom('Nimbus 2000')
 juice = PumpkinJuice()
-test_inventory = [wand, wand2, cauldron, cloak, cloak2, broom, juice, shirt, pants]
+test_inventory = [wand, wand2, cauldron, cloak, broom, juice]
 print(type(wand))

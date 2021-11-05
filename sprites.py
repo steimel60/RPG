@@ -45,9 +45,9 @@ class Player(pg.sprite.Sprite):
         self.invisible = False
         #Wearables
         self.hat = None
-        self.cloak = None
-        self.shirt = None
-        self.pants = None
+        self.cloak = HogwartsCloak(GryffindorHouse)
+        self.shirt = HogwartsTie(GryffindorHouse)
+        self.pants = BasicPants()
         self.wand = None
         #Movement
         self.speed = WALK_SPEED
