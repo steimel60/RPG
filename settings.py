@@ -5,6 +5,7 @@ game_folder = path.dirname(__file__)
 img_folder = path.join(game_folder, 'img')
 clothes_folder = path.join(img_folder, 'Clothing')
 font_folder = path.join(game_folder, 'Fonts')
+music_folder = path.join(game_folder, 'Music')
 
 # define some colors (R, G, B)
 WHITE = (255, 255, 255)

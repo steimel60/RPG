@@ -252,3 +252,48 @@ class TradeWithLoren(Quest):
         self.activeSpeakers = ['Loren']
         dialog = "Nevermind..."
         return dialog
+
+class LovePotion(Quest):
+    def __init__(self, game):
+        super().__init__(game)
+        self.name = "Love Potion"
+        self.prereqs = []
+        self.giver = 'Bryn'
+        self.activeSpeakers = [self.giver]
+        self.initialDialog = 'Hey I need some help!'
+        self.complete = False
+        ### Steps ###
+        self.talkedToBryn = False
+        self.gave_dylan_potion = False
+    #General Funcs
+    def activate_quest(self):
+        if self.check_prereqs():
+            self.active = True
+            self.activeSpeakers = ['Bryn']
+            return self.initialDialog
+
+    def check_prereqs(self):
+        prereqs_met = False
+        for quest in self.game.quests:
+            if quest.name in self.prereqs:
+                if quest.complete == True:
+                    prereqs_met = True
+        if len(self.prereqs) == 0:
+            prereqs_met = True
+        return prereqs_met
+
+    def get_quest_dialog(self, name):
+        if self.check_prereqs() == False:
+            return 'NODIALOG'
+        #Do Quest
+        if name == 'Bryn' and self.active and not self.talkedToBryn:
+            dialog = self.talk_to_bryn()
+
+        return dialog
+
+    #Quest Specific
+    def talk_to_bryn(self):
+        dialog = f"I need you to find Dylan and give him this potion.."
+        self.talkedToBryn = True
+        self.activeSpeakers = ['Bryn']
+        return dialog

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.5" tiledversion="1.7.2" orientation="orthogonal" renderorder="right-down" width="50" height="30" tilewidth="32" tileheight="32" infinite="0" nextlayerid="5" nextobjectid="35">
+<map version="1.5" tiledversion="1.7.2" orientation="orthogonal" renderorder="right-down" width="50" height="30" tilewidth="32" tileheight="32" infinite="0" nextlayerid="5" nextobjectid="37">
  <tileset firstgid="1" source="town.tsx"/>
  <tileset firstgid="1025" source="buildings.tsx"/>
  <layer id="1" name="Tile Layer 1" width="50" height="30">
@@ -157,6 +157,12 @@
   <object id="33" name="random_spawn" x="64" y="576" width="32" height="32">
    <properties>
     <property name="dir" type="int" value="0"/>
+   </properties>
+  </object>
+  <object id="36" name="Duelist" x="192" y="224" width="32" height="32">
+   <properties>
+    <property name="dir" type="int" value="2"/>
+    <property name="name_id" value="Random"/>
    </properties>
   </object>
  </objectgroup>

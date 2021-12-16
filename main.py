@@ -7,6 +7,7 @@ from sprites import *
 from tilemap import *
 from shops import *
 from handlers import *
+from level_data import LevelDataLibrary
 import random
 
 class Game:
@@ -28,18 +29,22 @@ class Game:
             'shop' : states.ShopState(self),
             'menu' : states.MenuState(self),
             'text' : states.TextState(self),
+            'duel' : states.DuelState(self),
             'scene': states.SceneState(self)
         }
         self.current_state = 'gameplay'
         #Handlers
         self.ItemHandler = ItemHandler(self)
         self.SpellHandler = SpellHandler(self)
+        #Libraries
+        self.level_library = LevelDataLibrary()
 
     def init_quests(self):
         quest0 = GetAWand(self)
         quest1 = TestQuest(self)
         quest2 = TradeWithLoren(self)
-        quests = [quest0, quest1, quest2]
+        quest3 = LovePotion(self)
+        quests = [quest1, quest2, quest3]
         return quests
 
     def init_main_quests(self):
@@ -58,6 +63,14 @@ class Game:
 
     def new(self, from_door=[False]):
         self.dt = self.clock.tick(FPS) / 1000
+        music = self.level_library.get_level_music(self.level)
+        if music != self.level_library.current_music:
+            pg.mixer.music.stop()
+            pg.mixer.music.unload()
+            pg.mixer.music.load(music)
+            pg.mixer.music.set_volume(self.level_library.get_music_volume(self.level))
+            pg.mixer.music.play(-1)
+            self.level_library.set_current_music(music)
         self.all_sprites = pg.sprite.Group()
         self.doors = pg.sprite.Group()
         self.user_group = pg.sprite.Group()
@@ -78,6 +91,8 @@ class Game:
                 self.door = Door(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.door_id, tile_object.to_level, tile_object.exit_dir)
             if tile_object.name == "NPC":
                 self.npc = NPC(self, tile_object.dir, tile_object.x, tile_object.y, tile_object.name_id)
+            if tile_object.name == "Duelist":
+                self.duelist = Duelist(self, tile_object.dir, tile_object.x, tile_object.y, tile_object.name_id)
             if tile_object.name == "random_spawn":
                 spawn = random.choice([0,0,0,0,0,1,1,1])
                 if spawn:

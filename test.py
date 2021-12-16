@@ -1,11 +1,22 @@
-str = f"I'm not important. This is a really long string that won't fit in the textbox unless we wrap it. So I found a text wrap func and going to try it out with this string."
-words = str.split(' ')
-for word in words:
-    print(word)
+class thing1():
+    def __init__(self):
+        self.name = 'item1'
 
-word_counter = 20
+    def print(self):
+        print('Item 1 print')
 
-words = words[word_counter:]
+    def super_print(self):
+        print('I am a thing1')
 
-for word in words:
-    print(word)
+class thing2(thing1):
+    def __init__(self, name):
+        super().__init__()
+        self.name = name
+
+    def print(self):
+        print(f'My name is {self.name}')
+        self.super_print()
+
+thing = thing2('car')
+thing.print()
+thing.super_print()

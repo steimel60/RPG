@@ -312,7 +312,6 @@ class ShopState():
             self.shop.update()
             self.get_shop_dialog()
         else:
-            print('Getting Shop')
             self.get_shop()
             self.get_items()
 
@@ -544,6 +543,40 @@ class TextState():
 
     def update(self):
         pass
+
+class DuelState():
+    def __init__(self, game):
+        self.game = game
+        self.last_state = None
+        self.duel_end = False
+
+    def enter_duel_state(self):
+        self.last_state = self.game.current_state
+        self.game.current_state = 'duel'
+
+    def exit_duel_state(self):
+        self.game.current_state = self.last_state
+        self.game.textbox.close_box()
+        self.last_state = None
+
+    def events(self):
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                self.game.quit()
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_ESCAPE:
+                    self.game.quit()
+            if event.type == pg.KEYUP:
+                if event.key == pg.K_SPACE:
+                    self.duel_end = True
+
+    def update(self):
+        if self.duel_end:
+            self.exit_duel_state()
+            self.duel_end = False
+
+    def draw(self):
+        self.game.screen.fill(BLACK)
 
 class SceneState():
     def __init__(self, game):

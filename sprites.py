@@ -456,6 +456,25 @@ class NPC(pg.sprite.Sprite):
         self.rect.x = self.x
         self.rect.y = self.y
 
+class Duelist(NPC):
+    def __init__(self,game, dir, x, y, name_id):
+        super().__init__(game, dir, x, y, name_id)
+
+    def check_interactions(self):
+        dialog = 'I love to duel!'
+        self.draw_dialog(dialog)
+        self.ask_to_duel()
+
+    def ask_to_duel(self):
+        dialog = 'Do you want to duel?'
+        answers = ['Yes', 'No']
+        duel = self.game.STATE_DICT['text'].ask_question(self.name, dialog, answers)
+        if duel == 'Yes':
+            dialog = "Good luck!"
+        else:
+            dialog = "Maybe next time.."
+        self.draw_dialog(dialog)
+
 class Walk_Path(pg.sprite.Sprite):
     def __init__(self, game, x, y, w, h, path_id):
         self.groups = game.walk_paths
